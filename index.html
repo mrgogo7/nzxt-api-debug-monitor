@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>NZXT CAM Live Monitor — Real Payload Sniffer</title>
+  <title>NZXT CAM Live Monitor</title>
   <style>
     :root {
       --bg: #09111f;
@@ -14,7 +14,6 @@
       --accent: #7cc7ff;
       --accent2: #7dffb3;
       --warn: #f6d365;
-      --danger: #ff7b7b;
       --line: rgba(120, 160, 220, 0.18);
       --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       --sans: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -31,16 +30,19 @@
       font-family: var(--sans);
     }
 
-    body { padding: 14px; }
+    body {
+      padding: 14px;
+    }
+
     .hidden { display: none !important; }
 
-    .normal-wrap {
-      max-width: 1440px;
+    .wrap {
+      max-width: 1400px;
       margin: 0 auto;
     }
 
     .title {
-      background: rgba(16, 25, 44, 0.88);
+      background: rgba(16, 25, 44, 0.9);
       border: 1px solid var(--line);
       border-radius: 18px;
       padding: 14px 16px;
@@ -51,6 +53,7 @@
     .title h1 {
       margin: 0 0 6px;
       font-size: 22px;
+      line-height: 1.2;
     }
 
     .title p {
@@ -62,16 +65,16 @@
 
     .grid {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1.08fr 0.92fr;
       gap: 12px;
     }
 
-    @media (max-width: 1080px) {
+    @media (max-width: 1100px) {
       .grid { grid-template-columns: 1fr; }
     }
 
     .panel {
-      background: rgba(16, 25, 44, 0.9);
+      background: rgba(16, 25, 44, 0.92);
       border: 1px solid var(--line);
       border-radius: 18px;
       overflow: hidden;
@@ -93,7 +96,9 @@
       font-size: 14px;
     }
 
-    .panel-body { padding: 12px; }
+    .panel-body {
+      padding: 12px;
+    }
 
     .status {
       display: flex;
@@ -126,25 +131,13 @@
     .dot.live { background: #58db7b; }
     .dot.wait { background: var(--warn); }
 
-    .toolbar-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .toolbar-label {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
     button, select {
       appearance: none;
       border: 1px solid var(--line);
       background: var(--panel2);
       color: var(--text);
       border-radius: 12px;
-      padding: 10px 14px;
+      padding: 9px 12px;
       font: inherit;
     }
 
@@ -158,19 +151,16 @@
       background: rgba(255,255,255,0.05);
     }
 
-    button:active {
-      transform: translateY(1px);
-    }
-
-    .controller-buttons {
+    .toolbar {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
       gap: 10px;
       margin-bottom: 12px;
     }
@@ -196,14 +186,48 @@
     }
 
     .callout {
-      border: 1px solid rgba(246, 211, 101, 0.25);
-      background: rgba(246, 211, 101, 0.08);
-      color: #ffe9a8;
+      border: 1px solid rgba(124,199,255,0.16);
+      background: rgba(124,199,255,0.07);
       border-radius: 14px;
       padding: 10px 12px;
       font-size: 12px;
       line-height: 1.5;
+      color: #d7e9ff;
+    }
+
+    .sensor-list {
+      display: grid;
+      gap: 10px;
       margin-top: 12px;
+    }
+
+    .sensor-item {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+
+    .sensor-item h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: minmax(120px, 220px) 1fr;
+      gap: 6px 10px;
+      font-size: 13px;
+    }
+
+    .kv div:nth-child(odd) {
+      color: var(--muted);
+      font-family: var(--mono);
+      word-break: break-word;
+    }
+
+    .kv div:nth-child(even) {
+      word-break: break-word;
     }
 
     .table-wrap {
@@ -243,7 +267,7 @@
     td.path {
       font-family: var(--mono);
       color: var(--accent);
-      width: 44%;
+      width: 45%;
     }
 
     td.type {
@@ -254,62 +278,54 @@
 
     td.value {
       font-family: var(--mono);
-      width: 42%;
+      width: 41%;
     }
 
-    tr.new-field td.path::before {
-      content: "NEW ";
-      color: var(--warn);
-      font-weight: 700;
-      margin-right: 4px;
-    }
-
-    .danger {
-      color: var(--danger);
-    }
-
-    .mono { font-family: var(--mono); }
-
-    pre {
+    pre, textarea {
       margin: 0;
-      white-space: pre-wrap;
-      word-break: break-word;
+      width: 100%;
+      white-space: pre;
+      overflow: auto;
       font-size: 12px;
       line-height: 1.5;
       font-family: var(--mono);
-      max-height: 46vh;
-      overflow: auto;
       background: var(--panel2);
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
+      color: var(--text);
     }
 
-    .list {
+    textarea {
+      min-height: 320px;
+      resize: vertical;
+      overflow: auto;
+    }
+
+    .two-col {
       display: grid;
-      gap: 10px;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
 
-    .item {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 10px 12px;
-      background: var(--panel2);
+    @media (max-width: 1000px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
     }
 
-    .item h3 {
-      margin: 0 0 8px;
-      font-size: 14px;
+    .muted {
+      color: var(--muted);
     }
 
-    .item p {
-      margin: 0;
+    .footer-note {
+      margin-top: 10px;
       color: var(--muted);
       font-size: 12px;
       line-height: 1.5;
     }
 
-    /* Kraken */
+    /* Kraken mode */
     body.kraken {
       padding: 0;
       overflow: hidden;
@@ -385,7 +401,6 @@
     .page-chip {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
       padding: 8px 14px;
       border-radius: 999px;
       border: 1px solid rgba(124,199,255,0.22);
@@ -397,7 +412,7 @@
     }
 
     .page-name {
-      font-size: 26px;
+      font-size: 28px;
       line-height: 1.1;
       font-weight: 800;
       max-width: 88%;
@@ -405,7 +420,7 @@
     }
 
     .big-value {
-      font-size: 76px;
+      font-size: 84px;
       line-height: 0.95;
       font-weight: 900;
       letter-spacing: -2px;
@@ -442,7 +457,7 @@
     }
 
     .mini .v {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 800;
       line-height: 1.1;
       word-break: break-word;
@@ -484,38 +499,24 @@
   </style>
 </head>
 <body>
-  <div id="normalApp" class="normal-wrap">
+  <div id="normalApp" class="wrap">
     <div class="title">
-      <h1 id="titleMain">NZXT CAM Web Integration — Real Payload Sniffer</h1>
-      <p id="titleDesc">
-        This build does runtime discovery for <span class="mono">window.nzxt</span>, <span class="mono">window.nzxt.v1</span>, and the live payload delivered through <span class="mono">window.nzxt.v1.onMonitoringDataUpdate</span>. It is a best-effort reverse-schema viewer for real runtime data.
+      <h1>NZXT CAM Web Integration — Final Live Viewer</h1>
+      <p>
+        Built for real payloads. The page stays live, adapts to different hardware models, and keeps raw data easy to copy.
+        It renders known CAM fields, but also flattens and shows any additional runtime fields that may appear on other devices.
       </p>
     </div>
 
     <section class="panel" style="margin-bottom:12px;">
       <div class="panel-head">
-        <h2 id="langPanelTitle">Language & Kraken Control</h2>
-        <div class="toolbar-row">
-          <span class="toolbar-label" id="langLabel">Language</span>
-          <select id="languageSelect">
-            <option value="en">English</option>
-            <option value="tr">Türkçe</option>
-            <option value="de">Deutsch</option>
-            <option value="fr">Français</option>
-            <option value="es">Español</option>
-            <option value="pt">Português</option>
-            <option value="ru">Русский</option>
-            <option value="ja">日本語</option>
-            <option value="ko">한국어</option>
-            <option value="zh">中文</option>
-          </select>
+        <h2>Kraken Control</h2>
+        <div class="status">
+          <span class="badge">Remote state: <span id="controllerState">-</span></span>
         </div>
       </div>
       <div class="panel-body">
-        <div class="status" style="margin-bottom:10px;">
-          <span class="badge"><span id="controllerStateLabel">Remote state:</span> <span id="controllerState">-</span></span>
-        </div>
-        <div class="controller-buttons">
+        <div class="toolbar">
           <button id="btnPrev" type="button">◀ Prev</button>
           <button id="btnNext" type="button">Next ▶</button>
           <button id="btnToggleAuto" type="button">Auto: ON</button>
@@ -526,27 +527,34 @@
 
     <section class="panel" style="margin-bottom:12px;">
       <div class="panel-head">
-        <h2 id="overviewPanelTitle">Live Runtime Overview</h2>
+        <h2>Live Overview</h2>
         <div class="status">
           <span class="badge"><span id="liveDot" class="dot wait"></span><span id="liveText">Waiting for CAM data...</span></span>
-          <span class="badge"><span id="lastUpdateLabel">Updated:</span> <span id="lastUpdate">-</span></span>
-          <span class="badge"><span id="krakenModeLabel">Kraken view:</span> <span id="krakenMode">-</span></span>
+          <span class="badge">Updated: <span id="lastUpdate">-</span></span>
+          <span class="badge">Kraken view: <span id="krakenMode">-</span></span>
+          <span class="badge">Payload count: <span id="payloadCount">0</span></span>
         </div>
       </div>
       <div class="panel-body">
         <div class="summary-grid" id="summary"></div>
-        <div class="callout" id="calloutText">
-          This page performs best-effort runtime sniffing. It discovers readable own-properties on <span class="mono">window.nzxt</span> / <span class="mono">window.nzxt.v1</span> and unions all callback payload paths seen over time.
+
+        <div class="callout">
+          <b>Important:</b> the values you see depend on your specific device, CAM version, and current runtime state.
+          Other hardware models may expose fewer or more fields. This page therefore shows both
+          <b>structured sensor cards</b> and a <b>flattened raw field list</b> so you can verify what CAM actually sends live.
         </div>
+
+        <div class="sensor-list" id="sensorCards"></div>
       </div>
     </section>
 
     <div class="grid">
       <section class="panel">
         <div class="panel-head">
-          <h2 id="v1SchemaTitle">Discovered window.nzxt / window.nzxt.v1 Schema</h2>
+          <h2>Flattened Live Fields</h2>
           <div class="status">
-            <span class="badge"><span id="v1RowsLabel">Rows:</span> <span id="v1RowCount">0</span></span>
+            <span class="badge">Rows: <span id="flatRowCount">0</span></span>
+            <button id="copyFlattenedBtn" type="button">Copy Flattened</button>
           </div>
         </div>
         <div class="panel-body">
@@ -554,23 +562,26 @@
             <table>
               <thead>
                 <tr>
-                  <th id="v1ThPath">Path</th>
-                  <th id="v1ThType">Type</th>
-                  <th id="v1ThValue">Preview</th>
+                  <th>Path</th>
+                  <th>Type</th>
+                  <th>Value</th>
                 </tr>
               </thead>
-              <tbody id="v1SchemaBody"></tbody>
+              <tbody id="flatBody"></tbody>
             </table>
+          </div>
+          <div class="footer-note">
+            This is the most reliable “what is CAM actually giving me right now?” view.
           </div>
         </div>
       </section>
 
       <section class="panel">
         <div class="panel-head">
-          <h2 id="payloadSchemaTitle">Discovered Payload Schema Union</h2>
+          <h2>Observed Schema Union</h2>
           <div class="status">
-            <span class="badge"><span id="payloadRowsLabel">Rows:</span> <span id="payloadRowCount">0</span></span>
-            <span class="badge"><span id="payloadCountLabel">Payloads:</span> <span id="payloadCount">0</span></span>
+            <span class="badge">Rows: <span id="schemaRowCount">0</span></span>
+            <button id="copySchemaBtn" type="button">Copy Schema</button>
           </div>
         </div>
         <div class="panel-body">
@@ -578,72 +589,62 @@
             <table>
               <thead>
                 <tr>
-                  <th id="payloadThPath">Path</th>
-                  <th id="payloadThType">Type(s)</th>
-                  <th id="payloadThValue">Last Preview</th>
+                  <th>Path</th>
+                  <th>Type(s)</th>
+                  <th>Last Preview</th>
                 </tr>
               </thead>
-              <tbody id="payloadSchemaBody"></tbody>
+              <tbody id="schemaBody"></tbody>
             </table>
           </div>
+          <div class="footer-note">
+            This union grows over time. If some fields appear only under certain hardware states, this view helps catch them.
+          </div>
         </div>
       </section>
     </div>
 
-    <div class="grid" style="margin-top:12px;">
+    <div class="two-col" style="margin-top:12px;">
       <section class="panel">
         <div class="panel-head">
-          <h2 id="latestPayloadTitle">Latest Raw Monitoring Payload</h2>
+          <h2>Latest Raw JSON</h2>
+          <div class="status">
+            <button id="copyJsonBtn" type="button">Copy JSON</button>
+            <button id="selectJsonBtn" type="button">Select All</button>
+          </div>
         </div>
         <div class="panel-body">
-          <pre id="latestPayloadRaw">No payload yet.</pre>
+          <textarea id="rawJson" spellcheck="false" readonly>No data yet.</textarea>
+          <div class="footer-note">
+            Designed for easy copy-paste into notes, issues, schema diff tools, or other prompts.
+          </div>
         </div>
       </section>
 
       <section class="panel">
         <div class="panel-head">
-          <h2 id="latestV1Title">Latest Raw window.nzxt Snapshot</h2>
+          <h2>Latest Runtime Metadata</h2>
+          <div class="status">
+            <button id="copyMetaBtn" type="button">Copy JSON</button>
+            <button id="selectMetaBtn" type="button">Select All</button>
+          </div>
         </div>
         <div class="panel-body">
-          <pre id="latestV1Raw">No snapshot yet.</pre>
+          <textarea id="rawMeta" spellcheck="false" readonly>No metadata yet.</textarea>
+          <div class="footer-note">
+            This shows the currently visible <span style="font-family:var(--mono)">window.nzxt.v1</span> metadata
+            such as width, height, shape, targetFps, and callback presence.
+          </div>
         </div>
       </section>
     </div>
-
-    <section class="panel" style="margin-top:12px;">
-      <div class="panel-head">
-        <h2 id="discoveryNotesTitle">Discovery Notes</h2>
-      </div>
-      <div class="panel-body">
-        <div class="list">
-          <div class="item">
-            <h3 id="note1Title">1. What this sniffs</h3>
-            <p id="note1Text">
-              Readable runtime properties on <span class="mono">window.nzxt</span>, readable runtime properties on <span class="mono">window.nzxt.v1</span>, and every payload path observed via <span class="mono">onMonitoringDataUpdate</span>.
-            </p>
-          </div>
-          <div class="item">
-            <h3 id="note2Title">2. What this cannot guarantee</h3>
-            <p id="note2Text">
-              Non-readable private internals, hidden state inside native code, inaccessible closures, or internal webview objects that are not exposed to JavaScript.
-            </p>
-          </div>
-          <div class="item">
-            <h3 id="note3Title">3. Why this is stronger than a static schema</h3>
-            <p id="note3Text">
-              It does not rely only on documented types. It also unions real runtime payload paths that actually appear while CAM is running on your system.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 
   <div id="krakenApp" class="kraken-stage hidden">
     <div class="kraken-circle">
       <div class="kraken-safe">
         <div class="kraken-header">
-          <div id="krakenTitle" class="kraken-title">NZXT CAM SNIFFER</div>
+          <div class="kraken-title">NZXT CAM</div>
           <div id="krakenHeaderSub" class="kraken-sub">640×640 circle</div>
         </div>
 
@@ -662,7 +663,6 @@
   <script>
     (function () {
       const isKrakenView = new URLSearchParams(location.search).get("kraken") === "1";
-
       if (isKrakenView) {
         document.body.classList.add("kraken");
         document.getElementById("normalApp").classList.add("hidden");
@@ -671,807 +671,55 @@
 
       const STORAGE_STATE_KEY = "nzxt.kraken.state";
       const STORAGE_CMD_KEY = "nzxt.kraken.command";
-      const STORAGE_LANG_KEY = "nzxt.ui.lang";
       const KRAKEN_ROTATE_MS = 3500;
 
-      const I18N = {
-        en: {
-          htmlLang: "en",
-          titleMain: "NZXT CAM Web Integration — Real Payload Sniffer",
-          titleDesc: "This build does runtime discovery for window.nzxt, window.nzxt.v1, and the live payload delivered through window.nzxt.v1.onMonitoringDataUpdate. It is a best-effort reverse-schema viewer for real runtime data.",
-          langPanelTitle: "Language & Kraken Control",
-          langLabel: "Language",
-          controllerStateLabel: "Remote state:",
-          btnPrev: "◀ Prev",
-          btnNext: "Next ▶",
-          btnToggleAutoOn: "Auto: ON",
-          btnToggleAutoOff: "Auto: OFF",
-          btnPage0: "Go Overview",
-          overviewPanelTitle: "Live Runtime Overview",
-          waitingCam: "Waiting for CAM data...",
-          liveCam: "Receiving CAM data",
-          updatedLabel: "Updated:",
-          krakenModeLabel: "Kraken view:",
-          yes: "Yes",
-          no: "No",
-          calloutText: "This page performs best-effort runtime sniffing. It discovers readable own-properties on window.nzxt / window.nzxt.v1 and unions all callback payload paths seen over time.",
-          v1SchemaTitle: "Discovered window.nzxt / window.nzxt.v1 Schema",
-          payloadSchemaTitle: "Discovered Payload Schema Union",
-          rowsLabel: "Rows:",
-          payloadsLabel: "Payloads:",
-          thPath: "Path",
-          thType: "Type",
-          thValue: "Preview",
-          thTypes: "Type(s)",
-          latestPayloadTitle: "Latest Raw Monitoring Payload",
-          latestV1Title: "Latest Raw window.nzxt Snapshot",
-          noPayloadYet: "No payload yet.",
-          noSnapshotYet: "No snapshot yet.",
-          discoveryNotesTitle: "Discovery Notes",
-          note1Title: "1. What this sniffs",
-          note1Text: "Readable runtime properties on window.nzxt, readable runtime properties on window.nzxt.v1, and every payload path observed via onMonitoringDataUpdate.",
-          note2Title: "2. What this cannot guarantee",
-          note2Text: "Non-readable private internals, hidden state inside native code, inaccessible closures, or internal webview objects that are not exposed to JavaScript.",
-          note3Title: "3. Why this is stronger than a static schema",
-          note3Text: "It does not rely only on documented types. It also unions real runtime payload paths that actually appear while CAM is running on your system.",
-          waitingData: "waiting for data...",
-          remoteStateMissing: "No Kraken state",
-          on: "ON",
-          off: "OFF",
-          auto: "AUTO",
-          manual: "MANUAL",
-          remoteStateTemplate: (index, total, auto) => `page ${index}/${total} • auto ${auto}`,
-          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
-          krakenTitle: "NZXT CAM SNIFFER",
-          krakenOverview: "Sniffer Overview",
-          sniffedKeys: "Sniffed Keys",
-          payloadPaths: "Payload Paths",
-          lastPayload: "Last Payload",
-          temp: "Temp",
-          load: "Load",
-          power: "Power",
-          fan: "Fan",
-          shape: "Shape",
-          width: "Width",
-          height: "Height",
-          autoRotate: "Auto Rotate",
-          payloadWord: "Payloads",
-          gpuWord: "GPU",
-          cpuWord: "CPU",
-          memoryWord: "Memory",
-          nzxtWord: "NZXT",
-          newField: "NEW",
-        },
-
-        tr: {
-          htmlLang: "tr",
-          titleMain: "NZXT CAM Web Integration — Gerçek Payload Sniffer",
-          titleDesc: "Bu sürüm window.nzxt, window.nzxt.v1 ve window.nzxt.v1.onMonitoringDataUpdate üzerinden gelen canlı payload için runtime keşif yapar. Gerçek runtime verisi için best-effort reverse-schema görüntüleyicisidir.",
-          langPanelTitle: "Dil ve Kraken Kontrolü",
-          langLabel: "Dil",
-          controllerStateLabel: "Uzak durum:",
-          btnPrev: "◀ Önceki",
-          btnNext: "Sonraki ▶",
-          btnToggleAutoOn: "Oto: AÇIK",
-          btnToggleAutoOff: "Oto: KAPALI",
-          btnPage0: "Özete Git",
-          overviewPanelTitle: "Canlı Runtime Özeti",
-          waitingCam: "CAM verisi bekleniyor...",
-          liveCam: "CAM verisi alınıyor",
-          updatedLabel: "Güncelleme:",
-          krakenModeLabel: "Kraken görünümü:",
-          yes: "Evet",
-          no: "Hayır",
-          calloutText: "Bu sayfa best-effort runtime sniffing yapar. window.nzxt / window.nzxt.v1 üzerindeki okunabilir own-property alanlarını keşfeder ve callback payload’da zaman içinde görülen tüm path’leri union schema olarak birleştirir.",
-          v1SchemaTitle: "Keşfedilen window.nzxt / window.nzxt.v1 Şeması",
-          payloadSchemaTitle: "Keşfedilen Payload Şema Birleşimi",
-          rowsLabel: "Satır:",
-          payloadsLabel: "Payload:",
-          thPath: "Yol",
-          thType: "Tür",
-          thValue: "Önizleme",
-          thTypes: "Tür(ler)",
-          latestPayloadTitle: "Son Ham Monitoring Payload",
-          latestV1Title: "Son Ham window.nzxt Snapshot",
-          noPayloadYet: "Henüz payload yok.",
-          noSnapshotYet: "Henüz snapshot yok.",
-          discoveryNotesTitle: "Keşif Notları",
-          note1Title: "1. Bu neyi sniff eder",
-          note1Text: "window.nzxt üzerindeki okunabilir runtime property’ler, window.nzxt.v1 üzerindeki okunabilir runtime property’ler ve onMonitoringDataUpdate üzerinden gözlenen tüm payload path’leri.",
-          note2Title: "2. Bunun garanti edemedikleri",
-          note2Text: "Okunamayan private internals, native code içindeki gizli state, erişilemeyen closure’lar veya JavaScript’e expose edilmeyen dahili webview objeleri.",
-          note3Title: "3. Neden statik şemadan daha güçlü",
-          note3Text: "Sadece belgelenmiş tiplere dayanmaz. CAM senin sisteminde çalışırken gerçekten görünen runtime payload path’lerini de birleştirir.",
-          waitingData: "veri bekleniyor...",
-          remoteStateMissing: "Kraken durumu yok",
-          on: "AÇIK",
-          off: "KAPALI",
-          auto: "OTO",
-          manual: "MANUEL",
-          remoteStateTemplate: (index, total, auto) => `sayfa ${index}/${total} • oto ${auto}`,
-          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
-          krakenTitle: "NZXT CAM SNIFFER",
-          krakenOverview: "Sniffer Özeti",
-          sniffedKeys: "Snifflenen Key",
-          payloadPaths: "Payload Path",
-          lastPayload: "Son Payload",
-          temp: "Sıcaklık",
-          load: "Yük",
-          power: "Güç",
-          fan: "Fan",
-          shape: "Şekil",
-          width: "Genişlik",
-          height: "Yükseklik",
-          autoRotate: "Oto Döndür",
-          payloadWord: "Payload",
-          gpuWord: "GPU",
-          cpuWord: "CPU",
-          memoryWord: "Bellek",
-          nzxtWord: "NZXT",
-          newField: "YENİ",
-        },
-
-        de: {
-          htmlLang: "de",
-          titleMain: "NZXT CAM Web Integration — Echter Payload-Sniffer",
-          titleDesc: "Diese Version führt eine Laufzeit-Erkennung für window.nzxt, window.nzxt.v1 und die Live-Payload über window.nzxt.v1.onMonitoringDataUpdate durch. Es ist ein Best-Effort-Reverse-Schema-Viewer für echte Laufzeitdaten.",
-          langPanelTitle: "Sprache & Kraken-Steuerung",
-          langLabel: "Sprache",
-          controllerStateLabel: "Remote-Status:",
-          btnPrev: "◀ Zurück",
-          btnNext: "Weiter ▶",
-          btnToggleAutoOn: "Auto: EIN",
-          btnToggleAutoOff: "Auto: AUS",
-          btnPage0: "Zur Übersicht",
-          overviewPanelTitle: "Live-Laufzeitübersicht",
-          waitingCam: "Warte auf CAM-Daten...",
-          liveCam: "CAM-Daten werden empfangen",
-          updatedLabel: "Aktualisiert:",
-          krakenModeLabel: "Kraken-Ansicht:",
-          yes: "Ja",
-          no: "Nein",
-          calloutText: "Diese Seite führt Best-Effort-Runtime-Sniffing aus. Sie entdeckt lesbare Own-Properties auf window.nzxt / window.nzxt.v1 und vereinigt alle im Callback beobachteten Payload-Pfade im Zeitverlauf.",
-          v1SchemaTitle: "Erkanntes window.nzxt / window.nzxt.v1-Schema",
-          payloadSchemaTitle: "Erkannte Payload-Schema-Union",
-          rowsLabel: "Zeilen:",
-          payloadsLabel: "Payloads:",
-          thPath: "Pfad",
-          thType: "Typ",
-          thValue: "Vorschau",
-          thTypes: "Typ(en)",
-          latestPayloadTitle: "Neueste rohe Monitoring-Payload",
-          latestV1Title: "Neuester roher window.nzxt-Snapshot",
-          noPayloadYet: "Noch keine Payload.",
-          noSnapshotYet: "Noch kein Snapshot.",
-          discoveryNotesTitle: "Erkennungsnotizen",
-          note1Title: "1. Was dies sniffed",
-          note1Text: "Lesbare Laufzeit-Properties auf window.nzxt, lesbare Laufzeit-Properties auf window.nzxt.v1 und jeder über onMonitoringDataUpdate beobachtete Payload-Pfad.",
-          note2Title: "2. Was nicht garantiert werden kann",
-          note2Text: "Nicht lesbare private Interna, versteckter Zustand in nativem Code, unzugängliche Closures oder interne Webview-Objekte, die JavaScript nicht zugänglich sind.",
-          note3Title: "3. Warum das stärker ist als ein statisches Schema",
-          note3Text: "Es verlässt sich nicht nur auf dokumentierte Typen. Es vereinigt auch echte Laufzeit-Payload-Pfade, die während des Betriebs von CAM auf deinem System erscheinen.",
-          waitingData: "warte auf Daten...",
-          remoteStateMissing: "Kein Kraken-Status",
-          on: "EIN",
-          off: "AUS",
-          auto: "AUTO",
-          manual: "MANUELL",
-          remoteStateTemplate: (index, total, auto) => `Seite ${index}/${total} • auto ${auto}`,
-          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
-          krakenTitle: "NZXT CAM SNIFFER",
-          krakenOverview: "Sniffer-Übersicht",
-          sniffedKeys: "Gesniffte Keys",
-          payloadPaths: "Payload-Pfade",
-          lastPayload: "Letzte Payload",
-          temp: "Temp.",
-          load: "Last",
-          power: "Leistung",
-          fan: "Lüfter",
-          shape: "Form",
-          width: "Breite",
-          height: "Höhe",
-          autoRotate: "Auto-Drehung",
-          payloadWord: "Payloads",
-          gpuWord: "GPU",
-          cpuWord: "CPU",
-          memoryWord: "Speicher",
-          nzxtWord: "NZXT",
-          newField: "NEU",
-        },
-
-        fr: {
-          htmlLang: "fr",
-          titleMain: "NZXT CAM Web Integration — Sniffer de payload réel",
-          titleDesc: "Cette version effectue une découverte à l’exécution pour window.nzxt, window.nzxt.v1 et la payload en direct fournie via window.nzxt.v1.onMonitoringDataUpdate. C’est un visualiseur reverse-schema best-effort pour des données runtime réelles.",
-          langPanelTitle: "Langue et contrôle Kraken",
-          langLabel: "Langue",
-          controllerStateLabel: "État distant :",
-          btnPrev: "◀ Précédent",
-          btnNext: "Suivant ▶",
-          btnToggleAutoOn: "Auto : ON",
-          btnToggleAutoOff: "Auto : OFF",
-          btnPage0: "Aller à l’aperçu",
-          overviewPanelTitle: "Vue d’ensemble runtime",
-          waitingCam: "En attente des données CAM...",
-          liveCam: "Réception des données CAM",
-          updatedLabel: "Mis à jour :",
-          krakenModeLabel: "Vue Kraken :",
-          yes: "Oui",
-          no: "Non",
-          calloutText: "Cette page effectue un sniffing runtime best-effort. Elle découvre les propriétés propres lisibles sur window.nzxt / window.nzxt.v1 et fusionne tous les chemins de payload observés via le callback.",
-          v1SchemaTitle: "Schéma découvert de window.nzxt / window.nzxt.v1",
-          payloadSchemaTitle: "Union du schéma payload découvert",
-          rowsLabel: "Lignes :",
-          payloadsLabel: "Payloads :",
-          thPath: "Chemin",
-          thType: "Type",
-          thValue: "Aperçu",
-          thTypes: "Type(s)",
-          latestPayloadTitle: "Dernière payload monitoring brute",
-          latestV1Title: "Dernier snapshot brut de window.nzxt",
-          noPayloadYet: "Aucune payload pour le moment.",
-          noSnapshotYet: "Aucun snapshot pour le moment.",
-          discoveryNotesTitle: "Notes de découverte",
-          note1Title: "1. Ce que cela sniffe",
-          note1Text: "Les propriétés runtime lisibles sur window.nzxt, les propriétés runtime lisibles sur window.nzxt.v1 et chaque chemin de payload observé via onMonitoringDataUpdate.",
-          note2Title: "2. Ce qui n’est pas garanti",
-          note2Text: "Les internals privés non lisibles, l’état caché dans le code natif, les closures inaccessibles ou les objets internes du webview non exposés à JavaScript.",
-          note3Title: "3. Pourquoi c’est plus fort qu’un schéma statique",
-          note3Text: "Cela ne repose pas uniquement sur les types documentés. Cela fusionne aussi les chemins de payload runtime réellement observés pendant l’exécution de CAM sur votre système.",
-          waitingData: "en attente des données...",
-          remoteStateMissing: "Aucun état Kraken",
-          on: "ON",
-          off: "OFF",
-          auto: "AUTO",
-          manual: "MANUEL",
-          remoteStateTemplate: (index, total, auto) => `page ${index}/${total} • auto ${auto}`,
-          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
-          krakenTitle: "NZXT CAM SNIFFER",
-          krakenOverview: "Aperçu du sniffer",
-          sniffedKeys: "Clés sniffées",
-          payloadPaths: "Chemins payload",
-          lastPayload: "Dernière payload",
-          temp: "Temp.",
-          load: "Charge",
-          power: "Puiss.",
-          fan: "Vent.",
-          shape: "Forme",
-          width: "Largeur",
-          height: "Hauteur",
-          autoRotate: "Rotation auto",
-          payloadWord: "Payloads",
-          gpuWord: "GPU",
-          cpuWord: "CPU",
-          memoryWord: "Mémoire",
-          nzxtWord: "NZXT",
-          newField: "NOUVEAU",
-        },
-
-        es: {
-          htmlLang: "es",
-          titleMain: "NZXT CAM Web Integration — Sniffer de payload real",
-          titleDesc: "Esta versión realiza descubrimiento en tiempo de ejecución para window.nzxt, window.nzxt.v1 y el payload en vivo entregado mediante window.nzxt.v1.onMonitoringDataUpdate. Es un visor reverse-schema best-effort para datos reales de runtime.",
-          langPanelTitle: "Idioma y control de Kraken",
-          langLabel: "Idioma",
-          controllerStateLabel: "Estado remoto:",
-          btnPrev: "◀ Anterior",
-          btnNext: "Siguiente ▶",
-          btnToggleAutoOn: "Auto: ON",
-          btnToggleAutoOff: "Auto: OFF",
-          btnPage0: "Ir al resumen",
-          overviewPanelTitle: "Resumen runtime en vivo",
-          waitingCam: "Esperando datos de CAM...",
-          liveCam: "Recibiendo datos de CAM",
-          updatedLabel: "Actualizado:",
-          krakenModeLabel: "Vista Kraken:",
-          yes: "Sí",
-          no: "No",
-          calloutText: "Esta página realiza sniffing runtime best-effort. Descubre propiedades propias legibles en window.nzxt / window.nzxt.v1 y une todas las rutas de payload observadas mediante el callback.",
-          v1SchemaTitle: "Esquema descubierto de window.nzxt / window.nzxt.v1",
-          payloadSchemaTitle: "Unión del esquema payload descubierto",
-          rowsLabel: "Filas:",
-          payloadsLabel: "Payloads:",
-          thPath: "Ruta",
-          thType: "Tipo",
-          thValue: "Vista previa",
-          thTypes: "Tipo(s)",
-          latestPayloadTitle: "Último payload de monitoring bruto",
-          latestV1Title: "Último snapshot bruto de window.nzxt",
-          noPayloadYet: "Aún no hay payload.",
-          noSnapshotYet: "Aún no hay snapshot.",
-          discoveryNotesTitle: "Notas de descubrimiento",
-          note1Title: "1. Qué sniffa esto",
-          note1Text: "Propiedades runtime legibles en window.nzxt, propiedades runtime legibles en window.nzxt.v1 y cada ruta de payload observada mediante onMonitoringDataUpdate.",
-          note2Title: "2. Lo que no puede garantizar",
-          note2Text: "Internos privados no legibles, estado oculto dentro de código nativo, closures inaccesibles u objetos internos del webview no expuestos a JavaScript.",
-          note3Title: "3. Por qué es más fuerte que un esquema estático",
-          note3Text: "No depende solo de tipos documentados. También une rutas de payload reales observadas mientras CAM se ejecuta en tu sistema.",
-          waitingData: "esperando datos...",
-          remoteStateMissing: "Sin estado Kraken",
-          on: "ON",
-          off: "OFF",
-          auto: "AUTO",
-          manual: "MANUAL",
-          remoteStateTemplate: (index, total, auto) => `página ${index}/${total} • auto ${auto}`,
-          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
-          krakenTitle: "NZXT CAM SNIFFER",
-          krakenOverview: "Resumen del sniffer",
-          sniffedKeys: "Claves sniffadas",
-          payloadPaths: "Rutas payload",
-          lastPayload: "Último payload",
-          temp: "Temp.",
-          load: "Carga",
-          power: "Pot.",
-          fan: "Vent.",
-          shape: "Forma",
-          width: "Ancho",
-          height: "Alto",
-          autoRotate: "Auto rotación",
-          payloadWord: "Payloads",
-          gpuWord: "GPU",
-          cpuWord: "CPU",
-          memoryWord: "Memoria",
-          nzxtWord: "NZXT",
-          newField: "NUEVO",
-        },
-
-        pt: {
-          htmlLang: "pt",
-          titleMain: "NZXT CAM Web Integration — Sniffer de payload real",
-          titleDesc: "Esta versão faz descoberta em tempo de execução para window.nzxt, window.nzxt.v1 e o payload ao vivo entregue via window.nzxt.v1.onMonitoringDataUpdate. É um visualizador reverse-schema best-effort para dados reais de runtime.",
-          langPanelTitle: "Idioma e controle do Kraken",
-          langLabel: "Idioma",
-          controllerStateLabel: "Estado remoto:",
-          btnPrev: "◀ Anterior",
-          btnNext: "Próximo ▶",
-          btnToggleAutoOn: "Auto: LIGADO",
-          btnToggleAutoOff: "Auto: DESLIGADO",
-          btnPage0: "Ir para visão geral",
-          overviewPanelTitle: "Visão geral runtime ao vivo",
-          waitingCam: "Aguardando dados do CAM...",
-          liveCam: "Recebendo dados do CAM",
-          updatedLabel: "Atualizado:",
-          krakenModeLabel: "Visualização Kraken:",
-          yes: "Sim",
-          no: "Não",
-          calloutText: "Esta página faz sniffing runtime best-effort. Ela descobre propriedades próprias legíveis em window.nzxt / window.nzxt.v1 e une todos os caminhos de payload observados pelo callback.",
-          v1SchemaTitle: "Esquema descoberto de window.nzxt / window.nzxt.v1",
-          payloadSchemaTitle: "União do esquema payload descoberto",
-          rowsLabel: "Linhas:",
-          payloadsLabel: "Payloads:",
-          thPath: "Caminho",
-          thType: "Tipo",
-          thValue: "Prévia",
-          thTypes: "Tipo(s)",
-          latestPayloadTitle: "Último payload bruto de monitoring",
-          latestV1Title: "Último snapshot bruto de window.nzxt",
-          noPayloadYet: "Ainda sem payload.",
-          noSnapshotYet: "Ainda sem snapshot.",
-          discoveryNotesTitle: "Notas de descoberta",
-          note1Title: "1. O que isso fareja",
-          note1Text: "Propriedades runtime legíveis em window.nzxt, propriedades runtime legíveis em window.nzxt.v1 e cada caminho de payload observado via onMonitoringDataUpdate.",
-          note2Title: "2. O que isso não pode garantir",
-          note2Text: "Internos privados não legíveis, estado oculto dentro de código nativo, closures inacessíveis ou objetos internos do webview não expostos ao JavaScript.",
-          note3Title: "3. Por que isso é mais forte que um esquema estático",
-          note3Text: "Não depende apenas de tipos documentados. Também une caminhos reais de payload observados enquanto o CAM roda no seu sistema.",
-          waitingData: "aguardando dados...",
-          remoteStateMissing: "Sem estado Kraken",
-          on: "LIGADO",
-          off: "DESLIGADO",
-          auto: "AUTO",
-          manual: "MANUAL",
-          remoteStateTemplate: (index, total, auto) => `página ${index}/${total} • auto ${auto}`,
-          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
-          krakenTitle: "NZXT CAM SNIFFER",
-          krakenOverview: "Resumo do sniffer",
-          sniffedKeys: "Chaves farejadas",
-          payloadPaths: "Caminhos payload",
-          lastPayload: "Último payload",
-          temp: "Temp.",
-          load: "Carga",
-          power: "Pot.",
-          fan: "Vent.",
-          shape: "Forma",
-          width: "Largura",
-          height: "Altura",
-          autoRotate: "Rotação auto",
-          payloadWord: "Payloads",
-          gpuWord: "GPU",
-          cpuWord: "CPU",
-          memoryWord: "Memória",
-          nzxtWord: "NZXT",
-          newField: "NOVO",
-        },
-
-        ru: {
-          htmlLang: "ru",
-          titleMain: "NZXT CAM Web Integration — Сниффер реального payload",
-          titleDesc: "Эта версия выполняет runtime-обнаружение для window.nzxt, window.nzxt.v1 и live-payload через window.nzxt.v1.onMonitoringDataUpdate. Это best-effort reverse-schema viewer для реальных runtime-данных.",
-          langPanelTitle: "Язык и управление Kraken",
-          langLabel: "Язык",
-          controllerStateLabel: "Удалённое состояние:",
-          btnPrev: "◀ Назад",
-          btnNext: "Вперёд ▶",
-          btnToggleAutoOn: "Авто: ВКЛ",
-          btnToggleAutoOff: "Авто: ВЫКЛ",
-          btnPage0: "К обзору",
-          overviewPanelTitle: "Живой runtime-обзор",
-          waitingCam: "Ожидание данных CAM...",
-          liveCam: "Получение данных CAM",
-          updatedLabel: "Обновлено:",
-          krakenModeLabel: "Режим Kraken:",
-          yes: "Да",
-          no: "Нет",
-          calloutText: "Эта страница выполняет best-effort runtime sniffing. Она обнаруживает читаемые own-property на window.nzxt / window.nzxt.v1 и объединяет все пути payload, наблюдаемые через callback.",
-          v1SchemaTitle: "Обнаруженная схема window.nzxt / window.nzxt.v1",
-          payloadSchemaTitle: "Объединённая схема обнаруженного payload",
-          rowsLabel: "Строк:",
-          payloadsLabel: "Payload:",
-          thPath: "Путь",
-          thType: "Тип",
-          thValue: "Превью",
-          thTypes: "Тип(ы)",
-          latestPayloadTitle: "Последний raw monitoring payload",
-          latestV1Title: "Последний raw snapshot window.nzxt",
-          noPayloadYet: "Payload пока нет.",
-          noSnapshotYet: "Snapshot пока нет.",
-          discoveryNotesTitle: "Примечания по обнаружению",
-          note1Title: "1. Что это sniff’ит",
-          note1Text: "Читаемые runtime-свойства на window.nzxt, читаемые runtime-свойства на window.nzxt.v1 и каждый путь payload, наблюдаемый через onMonitoringDataUpdate.",
-          note2Title: "2. Что не гарантируется",
-          note2Text: "Нечитаемые приватные internals, скрытое состояние в native-коде, недоступные closures или внутренние объекты webview, не доступные из JavaScript.",
-          note3Title: "3. Почему это сильнее статической схемы",
-          note3Text: "Это не опирается только на документированные типы. Оно также объединяет реальные runtime-пути payload, которые появляются при работе CAM на вашей системе.",
-          waitingData: "ожидание данных...",
-          remoteStateMissing: "Нет состояния Kraken",
-          on: "ВКЛ",
-          off: "ВЫКЛ",
-          auto: "АВТО",
-          manual: "РУЧНОЙ",
-          remoteStateTemplate: (index, total, auto) => `стр. ${index}/${total} • авто ${auto}`,
-          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
-          krakenTitle: "NZXT CAM SNIFFER",
-          krakenOverview: "Обзор сниффера",
-          sniffedKeys: "Обнаруж. ключи",
-          payloadPaths: "Пути payload",
-          lastPayload: "Последний payload",
-          temp: "Темп.",
-          load: "Нагрузка",
-          power: "Мощн.",
-          fan: "Вент.",
-          shape: "Форма",
-          width: "Ширина",
-          height: "Высота",
-          autoRotate: "Авто вращение",
-          payloadWord: "Payload",
-          gpuWord: "GPU",
-          cpuWord: "CPU",
-          memoryWord: "Память",
-          nzxtWord: "NZXT",
-          newField: "НОВОЕ",
-        },
-
-        ja: {
-          htmlLang: "ja",
-          titleMain: "NZXT CAM Web Integration — 実ペイロードスニファー",
-          titleDesc: "このバージョンは window.nzxt、window.nzxt.v1、および window.nzxt.v1.onMonitoringDataUpdate 経由のライブ payload に対してランタイム検出を行います。実際のランタイムデータ向けの best-effort reverse-schema viewer です。",
-          langPanelTitle: "言語とKrakenコントロール",
-          langLabel: "言語",
-          controllerStateLabel: "リモート状態:",
-          btnPrev: "◀ 前へ",
-          btnNext: "次へ ▶",
-          btnToggleAutoOn: "自動: ON",
-          btnToggleAutoOff: "自動: OFF",
-          btnPage0: "概要へ",
-          overviewPanelTitle: "ライブランタイム概要",
-          waitingCam: "CAMデータを待機中...",
-          liveCam: "CAMデータ受信中",
-          updatedLabel: "更新:",
-          krakenModeLabel: "Kraken表示:",
-          yes: "はい",
-          no: "いいえ",
-          calloutText: "このページは best-effort runtime sniffing を行います。window.nzxt / window.nzxt.v1 の読み取り可能な own-property を検出し、callback で観測されたすべての payload path を統合します。",
-          v1SchemaTitle: "検出された window.nzxt / window.nzxt.v1 スキーマ",
-          payloadSchemaTitle: "検出された payload スキーマ統合",
-          rowsLabel: "行数:",
-          payloadsLabel: "Payload数:",
-          thPath: "パス",
-          thType: "型",
-          thValue: "プレビュー",
-          thTypes: "型",
-          latestPayloadTitle: "最新の生 monitoring payload",
-          latestV1Title: "最新の生 window.nzxt スナップショット",
-          noPayloadYet: "まだ payload がありません。",
-          noSnapshotYet: "まだ snapshot がありません。",
-          discoveryNotesTitle: "検出メモ",
-          note1Title: "1. 何を sniff するか",
-          note1Text: "window.nzxt 上の読み取り可能な runtime property、window.nzxt.v1 上の読み取り可能な runtime property、そして onMonitoringDataUpdate 経由で観測された全 payload path。",
-          note2Title: "2. 保証できないもの",
-          note2Text: "読み取れない private internals、native code 内の隠し state、アクセス不能な closure、または JavaScript に公開されていない内部 webview オブジェクト。",
-          note3Title: "3. 静的スキーマより強い理由",
-          note3Text: "文書化された型だけに依存しません。CAM があなたのシステムで実行中に実際に現れる runtime payload path も統合します。",
-          waitingData: "データ待機中...",
-          remoteStateMissing: "Kraken状態なし",
-          on: "ON",
-          off: "OFF",
-          auto: "AUTO",
-          manual: "MANUAL",
-          remoteStateTemplate: (index, total, auto) => `${index}/${total} ページ • 自動 ${auto}`,
-          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
-          krakenTitle: "NZXT CAM SNIFFER",
-          krakenOverview: "スニファー概要",
-          sniffedKeys: "検出キー",
-          payloadPaths: "Payload パス",
-          lastPayload: "最新 payload",
-          temp: "温度",
-          load: "負荷",
-          power: "電力",
-          fan: "ファン",
-          shape: "形状",
-          width: "幅",
-          height: "高さ",
-          autoRotate: "自動回転",
-          payloadWord: "Payload",
-          gpuWord: "GPU",
-          cpuWord: "CPU",
-          memoryWord: "メモリ",
-          nzxtWord: "NZXT",
-          newField: "NEW",
-        },
-
-        ko: {
-          htmlLang: "ko",
-          titleMain: "NZXT CAM Web Integration — 실제 페이로드 스니퍼",
-          titleDesc: "이 버전은 window.nzxt, window.nzxt.v1 및 window.nzxt.v1.onMonitoringDataUpdate 를 통한 라이브 payload 에 대해 런타임 탐지를 수행합니다. 실제 런타임 데이터를 위한 best-effort reverse-schema viewer 입니다.",
-          langPanelTitle: "언어 및 Kraken 제어",
-          langLabel: "언어",
-          controllerStateLabel: "원격 상태:",
-          btnPrev: "◀ 이전",
-          btnNext: "다음 ▶",
-          btnToggleAutoOn: "자동: ON",
-          btnToggleAutoOff: "자동: OFF",
-          btnPage0: "개요로 이동",
-          overviewPanelTitle: "실시간 런타임 개요",
-          waitingCam: "CAM 데이터를 기다리는 중...",
-          liveCam: "CAM 데이터 수신 중",
-          updatedLabel: "업데이트:",
-          krakenModeLabel: "Kraken 보기:",
-          yes: "예",
-          no: "아니오",
-          calloutText: "이 페이지는 best-effort runtime sniffing 을 수행합니다. window.nzxt / window.nzxt.v1 의 읽을 수 있는 own-property 를 탐지하고 callback 에서 관측된 모든 payload path 를 통합합니다.",
-          v1SchemaTitle: "탐지된 window.nzxt / window.nzxt.v1 스키마",
-          payloadSchemaTitle: "탐지된 payload 스키마 통합",
-          rowsLabel: "행:",
-          payloadsLabel: "Payload:",
-          thPath: "경로",
-          thType: "유형",
-          thValue: "미리보기",
-          thTypes: "유형",
-          latestPayloadTitle: "최신 raw monitoring payload",
-          latestV1Title: "최신 raw window.nzxt 스냅샷",
-          noPayloadYet: "아직 payload 가 없습니다.",
-          noSnapshotYet: "아직 snapshot 이 없습니다.",
-          discoveryNotesTitle: "탐지 노트",
-          note1Title: "1. 무엇을 sniff 하는가",
-          note1Text: "window.nzxt 의 읽을 수 있는 runtime property, window.nzxt.v1 의 읽을 수 있는 runtime property, 그리고 onMonitoringDataUpdate 를 통해 관측된 모든 payload path.",
-          note2Title: "2. 보장할 수 없는 것",
-          note2Text: "읽을 수 없는 private internals, native code 내부의 hidden state, 접근 불가능한 closure, 또는 JavaScript 에 노출되지 않은 내부 webview 객체.",
-          note3Title: "3. 정적 스키마보다 강한 이유",
-          note3Text: "서화된 타입에만 의존하지 않습니다. CAM 이 시스템에서 실행되는 동안 실제로 나타나는 runtime payload path 도 통합합니다.",
-          waitingData: "데이터 대기 중...",
-          remoteStateMissing: "Kraken 상태 없음",
-          on: "ON",
-          off: "OFF",
-          auto: "AUTO",
-          manual: "MANUAL",
-          remoteStateTemplate: (index, total, auto) => `${index}/${total} 페이지 • 자동 ${auto}`,
-          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
-          krakenTitle: "NZXT CAM SNIFFER",
-          krakenOverview: "스니퍼 개요",
-          sniffedKeys: "탐지 키",
-          payloadPaths: "Payload 경로",
-          lastPayload: "최신 payload",
-          temp: "온도",
-          load: "부하",
-          power: "전력",
-          fan: "팬",
-          shape: "형태",
-          width: "너비",
-          height: "높이",
-          autoRotate: "자동 회전",
-          payloadWord: "Payload",
-          gpuWord: "GPU",
-          cpuWord: "CPU",
-          memoryWord: "메모리",
-          nzxtWord: "NZXT",
-          newField: "NEW",
-        },
-
-        zh: {
-          htmlLang: "zh-CN",
-          titleMain: "NZXT CAM Web Integration — 实时 Payload 嗅探器",
-          titleDesc: "此版本会对 window.nzxt、window.nzxt.v1 以及通过 window.nzxt.v1.onMonitoringDataUpdate 传递的实时 payload 进行运行时发现。这是一个面向真实运行时数据的 best-effort reverse-schema viewer。",
-          langPanelTitle: "语言与 Kraken 控制",
-          langLabel: "语言",
-          controllerStateLabel: "远程状态：",
-          btnPrev: "◀ 上一页",
-          btnNext: "下一页 ▶",
-          btnToggleAutoOn: "自动：开",
-          btnToggleAutoOff: "自动：关",
-          btnPage0: "转到概览",
-          overviewPanelTitle: "实时运行时概览",
-          waitingCam: "等待 CAM 数据...",
-          liveCam: "正在接收 CAM 数据",
-          updatedLabel: "更新时间：",
-          krakenModeLabel: "Kraken 视图：",
-          yes: "是",
-          no: "否",
-          calloutText: "此页面执行 best-effort runtime sniffing。它会发现 window.nzxt / window.nzxt.v1 上可读的 own-property，并合并 callback 中随时间观测到的所有 payload path。",
-          v1SchemaTitle: "发现的 window.nzxt / window.nzxt.v1 模式",
-          payloadSchemaTitle: "发现的 payload 模式并集",
-          rowsLabel: "行数：",
-          payloadsLabel: "Payload 数：",
-          thPath: "路径",
-          thType: "类型",
-          thValue: "预览",
-          thTypes: "类型",
-          latestPayloadTitle: "最新原始 monitoring payload",
-          latestV1Title: "最新原始 window.nzxt 快照",
-          noPayloadYet: "暂无 payload。",
-          noSnapshotYet: "暂无 snapshot。",
-          discoveryNotesTitle: "发现说明",
-          note1Title: "1. 此页面会嗅探什么",
-          note1Text: "window.nzxt 上可读的运行时属性、window.nzxt.v1 上可读的运行时属性，以及通过 onMonitoringDataUpdate 观察到的每个 payload 路径。",
-          note2Title: "2. 无法保证的内容",
-          note2Text: "不可读的私有内部状态、原生代码中的隐藏状态、不可访问的闭包，或未暴露给 JavaScript 的内部 webview 对象。",
-          note3Title: "3. 为什么它比静态模式更强",
-          note3Text: "它不只依赖文档化类型。它还会合并 CAM 在你的系统运行时实际出现的 runtime payload 路径。",
-          waitingData: "等待数据中...",
-          remoteStateMissing: "没有 Kraken 状态",
-          on: "开",
-          off: "关",
-          auto: "自动",
-          manual: "手动",
-          remoteStateTemplate: (index, total, auto) => `第 ${index}/${total} 页 • 自动 ${auto}`,
-          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
-          krakenTitle: "NZXT CAM SNIFFER",
-          krakenOverview: "嗅探概览",
-          sniffedKeys: "嗅探到的键",
-          payloadPaths: "Payload 路径",
-          lastPayload: "最新 Payload",
-          temp: "温度",
-          load: "负载",
-          power: "功耗",
-          fan: "风扇",
-          shape: "形状",
-          width: "宽度",
-          height: "高度",
-          autoRotate: "自动轮播",
-          payloadWord: "Payload",
-          gpuWord: "GPU",
-          cpuWord: "CPU",
-          memoryWord: "内存",
-          nzxtWord: "NZXT",
-          newField: "NEW",
-        }
-      };
-
-      function getQueryLang() {
-        const raw = new URLSearchParams(location.search).get("lang");
-        if (!raw) return null;
-        const lang = raw.toLowerCase();
-        if (I18N[lang]) return lang;
-        if (lang.startsWith("tr")) return "tr";
-        if (lang.startsWith("de")) return "de";
-        if (lang.startsWith("fr")) return "fr";
-        if (lang.startsWith("es")) return "es";
-        if (lang.startsWith("pt")) return "pt";
-        if (lang.startsWith("ru")) return "ru";
-        if (lang.startsWith("ja")) return "ja";
-        if (lang.startsWith("ko")) return "ko";
-        if (lang.startsWith("zh")) return "zh";
-        return "en";
-      }
-
-      function getBrowserLang() {
-        const lang = (navigator.language || "en").toLowerCase();
-        if (lang.startsWith("tr")) return "tr";
-        if (lang.startsWith("de")) return "de";
-        if (lang.startsWith("fr")) return "fr";
-        if (lang.startsWith("es")) return "es";
-        if (lang.startsWith("pt")) return "pt";
-        if (lang.startsWith("ru")) return "ru";
-        if (lang.startsWith("ja")) return "ja";
-        if (lang.startsWith("ko")) return "ko";
-        if (lang.startsWith("zh")) return "zh";
-        return "en";
-      }
-
-      let currentLang =
-        getQueryLang() ||
-        localStorage.getItem(STORAGE_LANG_KEY) ||
-        "en";
-
-      if (!I18N[currentLang]) currentLang = getBrowserLang();
-      if (!I18N[currentLang]) currentLang = "en";
-
-      function t(key) {
-        return I18N[currentLang]?.[key] ?? I18N.en[key] ?? key;
-      }
-
       const els = {
-        titleMain: document.getElementById("titleMain"),
-        titleDesc: document.getElementById("titleDesc"),
-        langPanelTitle: document.getElementById("langPanelTitle"),
-        langLabel: document.getElementById("langLabel"),
-        languageSelect: document.getElementById("languageSelect"),
-        controllerStateLabel: document.getElementById("controllerStateLabel"),
         controllerState: document.getElementById("controllerState"),
         btnPrev: document.getElementById("btnPrev"),
         btnNext: document.getElementById("btnNext"),
         btnToggleAuto: document.getElementById("btnToggleAuto"),
         btnPage0: document.getElementById("btnPage0"),
 
-        overviewPanelTitle: document.getElementById("overviewPanelTitle"),
         liveDot: document.getElementById("liveDot"),
         liveText: document.getElementById("liveText"),
-        lastUpdateLabel: document.getElementById("lastUpdateLabel"),
         lastUpdate: document.getElementById("lastUpdate"),
-        krakenModeLabel: document.getElementById("krakenModeLabel"),
         krakenMode: document.getElementById("krakenMode"),
-        summary: document.getElementById("summary"),
-        calloutText: document.getElementById("calloutText"),
-
-        v1SchemaTitle: document.getElementById("v1SchemaTitle"),
-        v1RowsLabel: document.getElementById("v1RowsLabel"),
-        v1RowCount: document.getElementById("v1RowCount"),
-        v1ThPath: document.getElementById("v1ThPath"),
-        v1ThType: document.getElementById("v1ThType"),
-        v1ThValue: document.getElementById("v1ThValue"),
-        v1SchemaBody: document.getElementById("v1SchemaBody"),
-
-        payloadSchemaTitle: document.getElementById("payloadSchemaTitle"),
-        payloadRowsLabel: document.getElementById("payloadRowsLabel"),
-        payloadRowCount: document.getElementById("payloadRowCount"),
-        payloadCountLabel: document.getElementById("payloadCountLabel"),
         payloadCount: document.getElementById("payloadCount"),
-        payloadThPath: document.getElementById("payloadThPath"),
-        payloadThType: document.getElementById("payloadThType"),
-        payloadThValue: document.getElementById("payloadThValue"),
-        payloadSchemaBody: document.getElementById("payloadSchemaBody"),
+        summary: document.getElementById("summary"),
+        sensorCards: document.getElementById("sensorCards"),
 
-        latestPayloadTitle: document.getElementById("latestPayloadTitle"),
-        latestPayloadRaw: document.getElementById("latestPayloadRaw"),
-        latestV1Title: document.getElementById("latestV1Title"),
-        latestV1Raw: document.getElementById("latestV1Raw"),
+        flatBody: document.getElementById("flatBody"),
+        flatRowCount: document.getElementById("flatRowCount"),
 
-        discoveryNotesTitle: document.getElementById("discoveryNotesTitle"),
-        note1Title: document.getElementById("note1Title"),
-        note1Text: document.getElementById("note1Text"),
-        note2Title: document.getElementById("note2Title"),
-        note2Text: document.getElementById("note2Text"),
-        note3Title: document.getElementById("note3Title"),
-        note3Text: document.getElementById("note3Text"),
+        schemaBody: document.getElementById("schemaBody"),
+        schemaRowCount: document.getElementById("schemaRowCount"),
 
-        krakenTitle: document.getElementById("krakenTitle"),
-        krakenHeaderSub: document.getElementById("krakenHeaderSub"),
+        rawJson: document.getElementById("rawJson"),
+        rawMeta: document.getElementById("rawMeta"),
+
+        copyJsonBtn: document.getElementById("copyJsonBtn"),
+        copyMetaBtn: document.getElementById("copyMetaBtn"),
+        copyFlattenedBtn: document.getElementById("copyFlattenedBtn"),
+        copySchemaBtn: document.getElementById("copySchemaBtn"),
+        selectJsonBtn: document.getElementById("selectJsonBtn"),
+        selectMetaBtn: document.getElementById("selectMetaBtn"),
+
         krakenPage: document.getElementById("krakenPage"),
         krakenPager: document.getElementById("krakenPager"),
         krakenMeta: document.getElementById("krakenMeta"),
+        krakenHeaderSub: document.getElementById("krakenHeaderSub"),
       };
 
       let latestPayload = null;
-      let lastRuntimeSnapshot = null;
-      let payloadCount = 0;
+      let latestMeta = null;
+      let liveCount = 0;
 
       let krakenPages = [];
       let krakenIndex = 0;
-      let krakenTimer = null;
       let krakenAutoRotate = true;
+      let krakenTimer = null;
 
-      const runtimeSchemaMap = new Map();
-      const payloadSchemaMap = new Map();
-      const newPayloadPaths = new Set();
+      const schemaMap = new Map();
 
       function esc(value) {
         return String(value)
@@ -1491,7 +739,7 @@
       function previewValue(value) {
         const type = safeType(value);
         if (type === "string") return value.length > 120 ? value.slice(0, 117) + "..." : value;
-        if (type === "number" || type === "boolean" || type === "undefined" || type === "null") return String(value);
+        if (type === "number" || type === "boolean" || type === "null" || type === "undefined") return String(value);
         if (type === "function") return `[function ${value.name || "anonymous"}]`;
         if (type === "array") return `[array(${value.length})]`;
         if (type === "object") return "[object]";
@@ -1503,19 +751,14 @@
         return Number(v).toFixed(digits);
       }
 
-      function fmtPct(v) {
+      function fmtPct01(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
-        return `${(Number(v) * 100).toFixed(0)}%`;
+        return `${(Number(v) * 100).toFixed(1)}%`;
       }
 
       function fmtTemp(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${Number(v).toFixed(1)}°C`;
-      }
-
-      function fmtMiB(v) {
-        if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
-        return `${Number(v).toFixed(0)} MiB`;
       }
 
       function fmtMHz(v) {
@@ -1533,154 +776,9 @@
         return `${Number(v).toFixed(1)} W`;
       }
 
-      function applyStaticTexts() {
-        document.documentElement.lang = I18N[currentLang]?.htmlLang || "en";
-
-        els.titleMain.textContent = t("titleMain");
-        els.titleDesc.textContent = t("titleDesc");
-        els.langPanelTitle.textContent = t("langPanelTitle");
-        els.langLabel.textContent = t("langLabel");
-        els.controllerStateLabel.textContent = t("controllerStateLabel");
-        els.btnPrev.textContent = t("btnPrev");
-        els.btnNext.textContent = t("btnNext");
-        els.btnPage0.textContent = t("btnPage0");
-        els.overviewPanelTitle.textContent = t("overviewPanelTitle");
-        els.lastUpdateLabel.textContent = t("updatedLabel");
-        els.krakenModeLabel.textContent = t("krakenModeLabel");
-        els.calloutText.textContent = t("calloutText");
-
-        els.v1SchemaTitle.textContent = t("v1SchemaTitle");
-        els.v1RowsLabel.textContent = t("rowsLabel");
-        els.v1ThPath.textContent = t("thPath");
-        els.v1ThType.textContent = t("thType");
-        els.v1ThValue.textContent = t("thValue");
-
-        els.payloadSchemaTitle.textContent = t("payloadSchemaTitle");
-        els.payloadRowsLabel.textContent = t("rowsLabel");
-        els.payloadCountLabel.textContent = t("payloadsLabel");
-        els.payloadThPath.textContent = t("thPath");
-        els.payloadThType.textContent = t("thTypes");
-        els.payloadThValue.textContent = t("thValue");
-
-        els.latestPayloadTitle.textContent = t("latestPayloadTitle");
-        els.latestV1Title.textContent = t("latestV1Title");
-        els.discoveryNotesTitle.textContent = t("discoveryNotesTitle");
-        els.note1Title.textContent = t("note1Title");
-        els.note1Text.textContent = t("note1Text");
-        els.note2Title.textContent = t("note2Title");
-        els.note2Text.textContent = t("note2Text");
-        els.note3Title.textContent = t("note3Title");
-        els.note3Text.textContent = t("note3Text");
-        els.krakenTitle.textContent = t("krakenTitle");
-
-        if (!latestPayload) {
-          els.liveText.textContent = t("waitingCam");
-          els.latestPayloadRaw.textContent = t("noPayloadYet");
-          els.latestV1Raw.textContent = t("noSnapshotYet");
-          els.krakenMeta.textContent = t("waitingData");
-        }
-
-        if (els.languageSelect) {
-          els.languageSelect.value = currentLang;
-        }
-
-        updateAutoButtonText();
-        renderControllerState();
-      }
-
-      function setLanguage(lang) {
-        if (!I18N[lang]) lang = "en";
-        currentLang = lang;
-        try {
-          localStorage.setItem(STORAGE_LANG_KEY, lang);
-        } catch {}
-        applyStaticTexts();
-        rerenderAll();
-      }
-
-      function updateAutoButtonText() {
-        els.btnToggleAuto.textContent = krakenAutoRotate ? t("btnToggleAutoOn") : t("btnToggleAutoOff");
-      }
-
-      function markLive() {
-        els.liveDot.classList.remove("wait");
-        els.liveDot.classList.add("live");
-        els.liveText.textContent = t("liveCam");
-        els.lastUpdate.textContent = new Date().toLocaleTimeString(I18N[currentLang]?.htmlLang || "en");
-        els.krakenMode.textContent = isKrakenView ? `${t("yes")} (?kraken=1)` : t("no");
-      }
-
-      function syncKrakenStateToStorage() {
-        try {
-          localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify({
-            index: krakenIndex,
-            autoRotate: krakenAutoRotate,
-            totalPages: krakenPages.length,
-            updatedAt: Date.now(),
-            lang: currentLang
-          }));
-        } catch {}
-      }
-
-      function sendKrakenCommand(type, payload = {}) {
-        try {
-          localStorage.setItem(STORAGE_CMD_KEY, JSON.stringify({
-            type,
-            ...payload,
-            ts: Date.now()
-          }));
-        } catch {}
-      }
-
-      function renderControllerState() {
-        let state = null;
-        try {
-          state = JSON.parse(localStorage.getItem(STORAGE_STATE_KEY) || "null");
-        } catch {}
-
-        if (!state) {
-          els.controllerState.textContent = t("remoteStateMissing");
-          return;
-        }
-
-        const autoText = state.autoRotate ? t("on") : t("off");
-        els.controllerState.textContent = I18N[currentLang].remoteStateTemplate(state.index + 1, state.totalPages || 0, autoText);
-      }
-
-      function bindControllerButtons() {
-        els.btnPrev.addEventListener("click", () => sendKrakenCommand("prev"));
-        els.btnNext.addEventListener("click", () => sendKrakenCommand("next"));
-        els.btnPage0.addEventListener("click", () => sendKrakenCommand("setIndex", { index: 0 }));
-
-        els.btnToggleAuto.addEventListener("click", () => {
-          let state = { autoRotate: true };
-          try {
-            state = JSON.parse(localStorage.getItem(STORAGE_STATE_KEY) || '{"autoRotate":true}');
-          } catch {}
-          sendKrakenCommand("setAutoRotate", { value: !state.autoRotate });
-        });
-
-        els.languageSelect.addEventListener("change", (e) => {
-          const lang = e.target.value;
-          setLanguage(lang);
-          sendKrakenCommand("setLanguage", { lang });
-        });
-      }
-
-      function getOwnKeysSafe(obj) {
-        try {
-          return Object.getOwnPropertyNames(obj);
-        } catch {
-          return [];
-        }
-      }
-
-      function safeReadProperty(obj, key) {
-        try {
-          return { ok: true, value: obj[key] };
-        } catch (err) {
-          return { ok: false, value: `[unreadable: ${err && err.message ? err.message : "error"}]` };
-        }
+      function fmtMiB(v) {
+        if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
+        return `${Number(v).toFixed(0)} MiB`;
       }
 
       function safeSnapshot(value, depth = 0, seen = new WeakSet()) {
@@ -1694,7 +792,7 @@
           return `[function ${value.name || "anonymous"}]`;
         }
 
-        if (depth > 6) {
+        if (depth > 8) {
           return `[max-depth:${type}]`;
         }
 
@@ -1704,25 +802,17 @@
         }
 
         if (type === "array") {
-          const arr = [];
-          for (let i = 0; i < Math.min(value.length, 50); i++) {
-            arr.push(safeSnapshot(value[i], depth + 1, seen));
-          }
-          if (value.length > 50) {
-            arr.push(`[truncated ${value.length - 50} more items]`);
-          }
-          return arr;
+          return value.map(item => safeSnapshot(item, depth + 1, seen));
         }
 
         if (type === "object") {
           const out = {};
-          const keys = getOwnKeysSafe(value);
-          for (const key of keys.slice(0, 100)) {
-            const r = safeReadProperty(value, key);
-            out[key] = r.ok ? safeSnapshot(r.value, depth + 1, seen) : r.value;
-          }
-          if (keys.length > 100) {
-            out.__truncated__ = `${keys.length - 100} more keys`;
+          for (const key of Object.keys(value)) {
+            try {
+              out[key] = safeSnapshot(value[key], depth + 1, seen);
+            } catch (err) {
+              out[key] = `[unreadable: ${err && err.message ? err.message : "error"}]`;
+            }
           }
           return out;
         }
@@ -1730,299 +820,491 @@
         return String(value);
       }
 
-      function walkSchema(value, path, targetMap, opts = {}) {
-        const {
-          maxDepth = 6,
-          seen = new WeakSet(),
-          markNew = false
-        } = opts;
-
+      function flatten(value, path = "", out = [], seen = new WeakSet()) {
         const type = safeType(value);
 
-        const existing = targetMap.get(path);
-        if (!existing) {
-          targetMap.set(path, {
-            path,
-            types: new Set([type]),
-            lastPreview: previewValue(value),
-            count: 1,
-            isNew: !!markNew
-          });
-        } else {
-          existing.types.add(type);
-          existing.lastPreview = previewValue(value);
-          existing.count += 1;
-        }
-
         if (type === "object" || type === "array") {
-          if (!value) return;
-          if (seen.has(value)) return;
-          seen.add(value);
+          if (value && seen.has(value)) {
+            out.push({ path, type: "circular", value: "[circular]" });
+            return out;
+          }
+          if (value) seen.add(value);
         }
-
-        if (maxDepth <= 0) return;
 
         if (type === "array") {
+          out.push({ path, type, value: `[array(${value.length})]` });
           if (value.length === 0) {
-            const itemPath = `${path}[]`;
-            if (!targetMap.has(itemPath)) {
-              targetMap.set(itemPath, {
-                path: itemPath,
-                types: new Set(["empty"]),
-                lastPreview: "[]",
-                count: 1,
-                isNew: !!markNew
-              });
-            }
+            out.push({ path: `${path}[]`, type: "empty", value: "[]" });
           } else {
             value.forEach((item, index) => {
-              walkSchema(item, `${path}[${index}]`, targetMap, {
-                maxDepth: maxDepth - 1,
-                seen,
-                markNew
-              });
-
-              walkSchema(item, `${path}[]`, targetMap, {
-                maxDepth: maxDepth - 1,
-                seen,
-                markNew
-              });
+              flatten(item, `${path}[${index}]`, out, seen);
+              if (safeType(item) === "object" || safeType(item) === "array") {
+                flatten(item, `${path}[]`, out, seen);
+              }
             });
           }
-          return;
+          return out;
         }
 
         if (type === "object") {
-          const keys = getOwnKeysSafe(value);
-          keys.forEach((key) => {
-            const r = safeReadProperty(value, key);
-            const nextPath = path ? `${path}.${key}` : key;
-            if (r.ok) {
-              walkSchema(r.value, nextPath, targetMap, {
-                maxDepth: maxDepth - 1,
-                seen,
-                markNew
-              });
-            } else {
-              const unreadType = "unreadable";
-              const existingUnread = targetMap.get(nextPath);
-              if (!existingUnread) {
-                targetMap.set(nextPath, {
-                  path: nextPath,
-                  types: new Set([unreadType]),
-                  lastPreview: String(r.value),
-                  count: 1,
-                  isNew: !!markNew
-                });
-              } else {
-                existingUnread.types.add(unreadType);
-                existingUnread.lastPreview = String(r.value);
-                existingUnread.count += 1;
-              }
-            }
-          });
-        }
-      }
-
-      function sniffNzxtRuntime() {
-        const snapshotRoot = {
-          nzxt: null
-        };
-
-        if (typeof window.nzxt !== "undefined") {
-          snapshotRoot.nzxt = safeSnapshot(window.nzxt);
-        } else {
-          snapshotRoot.nzxt = "[undefined]";
+          out.push({ path, type, value: "[object]" });
+          const keys = Object.keys(value);
+          if (keys.length === 0) {
+            out.push({ path: `${path}.{}`, type: "empty", value: "{}" });
+          } else {
+            keys.forEach((key) => {
+              flatten(value[key], path ? `${path}.${key}` : key, out, seen);
+            });
+          }
+          return out;
         }
 
-        lastRuntimeSnapshot = snapshotRoot;
-
-        runtimeSchemaMap.clear();
-
-        if (typeof window.nzxt !== "undefined") {
-          walkSchema(window.nzxt, "window.nzxt", runtimeSchemaMap, { maxDepth: 6, seen: new WeakSet() });
-        } else {
-          runtimeSchemaMap.set("window.nzxt", {
-            path: "window.nzxt",
-            types: new Set(["undefined"]),
-            lastPreview: "undefined",
-            count: 1,
-            isNew: false
-          });
-        }
-
-        renderRuntimeSchema();
-        renderLatestRuntimeRaw();
-      }
-
-      function processPayload(payload) {
-        latestPayload = safeSnapshot(payload);
-        payloadCount += 1;
-
-        const beforePaths = new Set(payloadSchemaMap.keys());
-        walkSchema(payload, "monitoringData", payloadSchemaMap, {
-          maxDepth: 8,
-          seen: new WeakSet(),
-          markNew: false
+        out.push({
+          path,
+          type,
+          value: value === undefined ? "undefined" : String(value)
         });
 
-        for (const [path, item] of payloadSchemaMap.entries()) {
-          if (!beforePaths.has(path)) {
-            item.isNew = true;
-            newPayloadPaths.add(path);
-          }
-        }
-
-        renderPayloadSchema();
-        renderLatestPayloadRaw();
+        return out;
       }
 
-      function renderOverview() {
+      function updateSchema(flatRows) {
+        for (const row of flatRows) {
+          const existing = schemaMap.get(row.path);
+          if (!existing) {
+            schemaMap.set(row.path, {
+              path: row.path,
+              types: new Set([row.type]),
+              lastValue: row.value
+            });
+          } else {
+            existing.types.add(row.type);
+            existing.lastValue = row.value;
+          }
+        }
+      }
+
+      function renderSummary() {
         const cpus = Array.isArray(latestPayload?.cpus) ? latestPayload.cpus.length : 0;
         const gpus = Array.isArray(latestPayload?.gpus) ? latestPayload.gpus.length : 0;
         const ramMods = Array.isArray(latestPayload?.ram?.modules) ? latestPayload.ram.modules.length : 0;
 
-        const runtimeKeyCount = runtimeSchemaMap.size;
-        const payloadPathCount = payloadSchemaMap.size;
-
         const cards = [
-          { k: "window.nzxt paths", v: runtimeKeyCount },
-          { k: "payload paths", v: payloadPathCount },
-          { k: t("payloadWord"), v: payloadCount },
-          { k: "CPU count", v: cpus },
-          { k: "GPU count", v: gpus },
-          { k: "RAM modules", v: ramMods },
-          { k: "window.nzxt.v1.shape", v: window.nzxt?.v1?.shape ?? "N/A" },
-          { k: "window.nzxt.v1.targetFps", v: window.nzxt?.v1?.targetFps ?? "N/A" },
+          ["CPU count", cpus],
+          ["GPU count", gpus],
+          ["RAM modules", ramMods],
+          ["Payload rows", els.flatRowCount.textContent || "0"],
+          ["Observed schema rows", schemaMap.size],
+          ["Display", `${window.nzxt?.v1?.width ?? "?"} × ${window.nzxt?.v1?.height ?? "?"}`],
+          ["Shape", window.nzxt?.v1?.shape ?? "N/A"],
+          ["Target FPS", window.nzxt?.v1?.targetFps ?? "N/A"]
         ];
 
-        els.summary.innerHTML = cards.map(card => `
+        els.summary.innerHTML = cards.map(([k, v]) => `
           <div class="card">
-            <div class="k">${esc(card.k)}</div>
-            <div class="v">${esc(card.v)}</div>
+            <div class="k">${esc(k)}</div>
+            <div class="v">${esc(v)}</div>
           </div>
         `).join("");
       }
 
-      function renderRuntimeSchema() {
-        const rows = Array.from(runtimeSchemaMap.values())
+      function pairRows(obj) {
+        return Object.entries(obj).map(([k, v]) => `
+          <div>${esc(k)}</div>
+          <div>${esc(v)}</div>
+        `).join("");
+      }
+
+      function renderSensorCards() {
+        const data = latestPayload;
+        const parts = [];
+
+        if (!data) {
+          els.sensorCards.innerHTML = "";
+          return;
+        }
+
+        if (Array.isArray(data.cpus)) {
+          data.cpus.forEach((cpu, i) => {
+            parts.push(`
+              <div class="sensor-item">
+                <h3>CPU ${i} — ${esc(cpu.name || "Unknown CPU")}</h3>
+                <div class="kv">
+                  ${pairRows({
+                    manufacturer: cpu.manufacturer ?? "N/A",
+                    codeName: cpu.codeName ?? "N/A",
+                    socket: cpu.socket ?? "N/A",
+                    load: fmtPct01(cpu.load),
+                    temperature: fmtTemp(cpu.temperature),
+                    frequency: fmtMHz(cpu.frequency),
+                    minFrequency: fmtMHz(cpu.minFrequency),
+                    maxFrequency: fmtMHz(cpu.maxFrequency),
+                    stockFrequency: fmtMHz(cpu.stockFrequency),
+                    fanSpeed: fmtRPM(cpu.fanSpeed),
+                    minFanSpeed: fmtRPM(cpu.minFanSpeed),
+                    maxFanSpeed: fmtRPM(cpu.maxFanSpeed),
+                    numCores: cpu.numCores ?? "N/A",
+                    numThreads: cpu.numThreads ?? "N/A",
+                    tdp: fmtW(cpu.tdp),
+                    power: fmtW(cpu.power),
+                  })}
+                </div>
+              </div>
+            `);
+          });
+        }
+
+        if (Array.isArray(data.gpus)) {
+          data.gpus.forEach((gpu, i) => {
+            parts.push(`
+              <div class="sensor-item">
+                <h3>GPU ${i} — ${esc(gpu.name || "Unknown GPU")}</h3>
+                <div class="kv">
+                  ${pairRows({
+                    load: fmtPct01(gpu.load),
+                    temperature: fmtTemp(gpu.temperature),
+                    minTemperature: fmtTemp(gpu.minTemperature),
+                    maxTemperature: fmtTemp(gpu.maxTemperature),
+                    frequency: fmtMHz(gpu.frequency),
+                    minFrequency: fmtMHz(gpu.minFrequency),
+                    maxFrequency: fmtMHz(gpu.maxFrequency),
+                    stockFrequency: fmtMHz(gpu.stockFrequency),
+                    fanSpeed: fmtRPM(gpu.fanSpeed),
+                    minFanSpeed: fmtRPM(gpu.minFanSpeed),
+                    maxFanSpeed: fmtRPM(gpu.maxFanSpeed),
+                    power: fmtW(gpu.power),
+                  })}
+                </div>
+              </div>
+            `);
+          });
+        }
+
+        if (data.ram) {
+          parts.push(`
+            <div class="sensor-item">
+              <h3>RAM</h3>
+              <div class="kv">
+                ${pairRows({
+                  totalSize: fmtMiB(data.ram.totalSize),
+                  inUse: fmtMiB(data.ram.inUse),
+                  moduleCount: Array.isArray(data.ram.modules) ? data.ram.modules.length : 0
+                })}
+              </div>
+            </div>
+          `);
+
+          (data.ram.modules || []).forEach((mod, i) => {
+            parts.push(`
+              <div class="sensor-item">
+                <h3>RAM Module ${i}</h3>
+                <div class="kv">
+                  ${pairRows({
+                    kind: mod.kind ?? "N/A",
+                    size: fmtMiB(mod.size),
+                    model: mod.model ?? "N/A",
+                    frequency: fmtMHz(mod.frequency),
+                    stockFrequency: fmtMHz(mod.stockFrequency),
+                    effectiveDataRateHint: mod.frequency != null ? `${Number(mod.frequency) * 2} MT/s (approx)` : "N/A"
+                  })}
+                </div>
+              </div>
+            `);
+          });
+        }
+
+        if (data.kraken) {
+          parts.push(`
+            <div class="sensor-item">
+              <h3>Kraken</h3>
+              <div class="kv">
+                ${pairRows({
+                  liquidTemperature: fmtTemp(data.kraken.liquidTemperature)
+                })}
+              </div>
+            </div>
+          `);
+        }
+
+        parts.push(`
+          <div class="sensor-item">
+            <h3>Runtime Metadata</h3>
+            <div class="kv">
+              ${pairRows({
+                width: window.nzxt?.v1?.width ?? "N/A",
+                height: window.nzxt?.v1?.height ?? "N/A",
+                shape: window.nzxt?.v1?.shape ?? "N/A",
+                targetFps: window.nzxt?.v1?.targetFps ?? "N/A"
+              })}
+            </div>
+          </div>
+        `);
+
+        els.sensorCards.innerHTML = parts.join("");
+      }
+
+      function renderFlattened() {
+        if (!latestPayload) {
+          els.flatBody.innerHTML = "";
+          els.flatRowCount.textContent = "0";
+          return;
+        }
+
+        const combined = {
+          windowNzxtV1: {
+            width: window.nzxt?.v1?.width ?? null,
+            height: window.nzxt?.v1?.height ?? null,
+            shape: window.nzxt?.v1?.shape ?? null,
+            targetFps: window.nzxt?.v1?.targetFps ?? null,
+          },
+          monitoringData: latestPayload
+        };
+
+        const rows = flatten(combined, "root");
+        els.flatRowCount.textContent = rows.length;
+
+        els.flatBody.innerHTML = rows.map((row) => `
+          <tr>
+            <td class="path">${esc(row.path)}</td>
+            <td class="type">${esc(row.type)}</td>
+            <td class="value">${esc(row.value)}</td>
+          </tr>
+        `).join("");
+
+        updateSchema(rows);
+      }
+
+      function renderSchema() {
+        const rows = Array.from(schemaMap.values())
           .sort((a, b) => a.path.localeCompare(b.path));
 
-        els.v1RowCount.textContent = rows.length;
-        els.v1SchemaBody.innerHTML = rows.map((row) => `
+        els.schemaRowCount.textContent = rows.length;
+        els.schemaBody.innerHTML = rows.map((row) => `
           <tr>
             <td class="path">${esc(row.path)}</td>
             <td class="type">${esc(Array.from(row.types).join(" | "))}</td>
-            <td class="value">${esc(row.lastPreview)}</td>
+            <td class="value">${esc(row.lastValue)}</td>
           </tr>
         `).join("");
       }
 
-      function renderPayloadSchema() {
-        const rows = Array.from(payloadSchemaMap.values())
-          .sort((a, b) => a.path.localeCompare(b.path));
-
-        els.payloadRowCount.textContent = rows.length;
-        els.payloadCount.textContent = payloadCount;
-
-        els.payloadSchemaBody.innerHTML = rows.map((row) => `
-          <tr class="${row.isNew ? "new-field" : ""}">
-            <td class="path">${esc(row.path)}</td>
-            <td class="type">${esc(Array.from(row.types).join(" | "))}</td>
-            <td class="value">${esc(row.lastPreview)}</td>
-          </tr>
-        `).join("");
-      }
-
-      function renderLatestPayloadRaw() {
-        els.latestPayloadRaw.textContent = latestPayload
+      function renderRawJson() {
+        els.rawJson.value = latestPayload
           ? JSON.stringify(latestPayload, null, 2)
-          : t("noPayloadYet");
+          : "No data yet.";
       }
 
-      function renderLatestRuntimeRaw() {
-        els.latestV1Raw.textContent = lastRuntimeSnapshot
-          ? JSON.stringify(lastRuntimeSnapshot, null, 2)
-          : t("noSnapshotYet");
+      function renderMeta() {
+        latestMeta = {
+          windowNzxtV1: {
+            width: window.nzxt?.v1?.width ?? null,
+            height: window.nzxt?.v1?.height ?? null,
+            shape: window.nzxt?.v1?.shape ?? null,
+            targetFps: window.nzxt?.v1?.targetFps ?? null,
+            onMonitoringDataUpdate: typeof window.nzxt?.v1?.onMonitoringDataUpdate
+          }
+        };
+
+        els.rawMeta.value = JSON.stringify(latestMeta, null, 2);
+      }
+
+      function markLive() {
+        els.liveDot.classList.remove("wait");
+        els.liveDot.classList.add("live");
+        els.liveText.textContent = "Receiving CAM data";
+        els.lastUpdate.textContent = new Date().toLocaleTimeString("en-US");
+        els.krakenMode.textContent = isKrakenView ? "Yes (?kraken=1)" : "No";
+        els.payloadCount.textContent = String(liveCount);
+      }
+
+      async function copyText(text, button) {
+        const original = button.textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+          button.textContent = "Copied";
+        } catch {
+          button.textContent = "Copy failed";
+        }
+        setTimeout(() => {
+          button.textContent = original;
+        }, 1200);
+      }
+
+      function bindCopyButtons() {
+        els.copyJsonBtn.addEventListener("click", () => copyText(els.rawJson.value, els.copyJsonBtn));
+        els.copyMetaBtn.addEventListener("click", () => copyText(els.rawMeta.value, els.copyMetaBtn));
+
+        els.copyFlattenedBtn.addEventListener("click", () => {
+          const rows = [];
+          const trs = els.flatBody.querySelectorAll("tr");
+          trs.forEach((tr) => {
+            const tds = tr.querySelectorAll("td");
+            rows.push([
+              tds[0]?.textContent ?? "",
+              tds[1]?.textContent ?? "",
+              tds[2]?.textContent ?? ""
+            ].join("\t"));
+          });
+          copyText(rows.join("\n"), els.copyFlattenedBtn);
+        });
+
+        els.copySchemaBtn.addEventListener("click", () => {
+          const rows = [];
+          const trs = els.schemaBody.querySelectorAll("tr");
+          trs.forEach((tr) => {
+            const tds = tr.querySelectorAll("td");
+            rows.push([
+              tds[0]?.textContent ?? "",
+              tds[1]?.textContent ?? "",
+              tds[2]?.textContent ?? ""
+            ].join("\t"));
+          });
+          copyText(rows.join("\n"), els.copySchemaBtn);
+        });
+
+        els.selectJsonBtn.addEventListener("click", () => {
+          els.rawJson.focus();
+          els.rawJson.select();
+        });
+
+        els.selectMetaBtn.addEventListener("click", () => {
+          els.rawMeta.focus();
+          els.rawMeta.select();
+        });
+      }
+
+      function renderAll() {
+        renderMeta();
+        renderRawJson();
+        renderFlattened();
+        renderSchema();
+        renderSummary();
+        renderSensorCards();
+        renderKrakenPage();
+      }
+
+      function handleMonitoringDataUpdate(data) {
+        latestPayload = safeSnapshot(data);
+        liveCount += 1;
+        markLive();
+        renderAll();
+        startKrakenRotation();
+      }
+
+      function setupMonitoringHook() {
+        window.nzxt = window.nzxt || {};
+        window.nzxt.v1 = window.nzxt.v1 || {};
+
+        let userHandler = null;
+
+        Object.defineProperty(window.nzxt.v1, "onMonitoringDataUpdate", {
+          configurable: true,
+          enumerable: true,
+          get() {
+            return userHandler;
+          },
+          set(fn) {
+            userHandler = function wrappedMonitoringHandler(data) {
+              try {
+                handleMonitoringDataUpdate(data);
+              } catch (err) {
+                console.error("Monitoring render error:", err);
+              }
+
+              if (typeof fn === "function") {
+                try {
+                  fn(data);
+                } catch (err) {
+                  console.error("User handler error:", err);
+                }
+              }
+            };
+          }
+        });
+
+        if (typeof window.nzxt.v1.onMonitoringDataUpdate !== "function") {
+          window.nzxt.v1.onMonitoringDataUpdate = function () {};
+        }
       }
 
       function buildKrakenPages() {
-        const cpus = Array.isArray(latestPayload?.cpus) ? latestPayload.cpus : [];
-        const gpus = Array.isArray(latestPayload?.gpus) ? latestPayload.gpus : [];
-        const ram = latestPayload?.ram || null;
+        const payload = latestPayload;
+        if (!payload) return [];
 
         const pages = [];
 
         pages.push({
-          chip: t("krakenOverview").toUpperCase(),
-          name: t("krakenOverview"),
-          big: String(payloadSchemaMap.size),
+          chip: "OVERVIEW",
+          name: "System Overview",
+          big: `${(payload.cpus || []).length} CPU / ${(payload.gpus || []).length} GPU`,
           unit: "",
           minis: [
-            { k: t("sniffedKeys"), v: String(runtimeSchemaMap.size) },
-            { k: t("payloadPaths"), v: String(payloadSchemaMap.size) },
-            { k: t("payloadWord"), v: String(payloadCount) },
-            { k: t("shape"), v: window.nzxt?.v1?.shape ?? "N/A" },
+            { k: "RAM", v: payload.ram ? `${fmtMiB(payload.ram.inUse)} / ${fmtMiB(payload.ram.totalSize)}` : "N/A" },
+            { k: "LIQUID", v: fmtTemp(payload.kraken?.liquidTemperature) },
+            { k: "SHAPE", v: window.nzxt?.v1?.shape ?? "N/A" },
+            { k: "FPS", v: String(window.nzxt?.v1?.targetFps ?? "N/A") }
           ]
         });
 
-        cpus.forEach((cpu, i) => {
+        (payload.cpus || []).forEach((cpu, i) => {
           pages.push({
-            chip: `${t("cpuWord")} ${i}`,
-            name: cpu.name || `${t("cpuWord")} ${i}`,
+            chip: `CPU ${i}`,
+            name: cpu.name || `CPU ${i}`,
             big: cpu.temperature != null ? fmtNum(cpu.temperature, 1) : "N/A",
             unit: cpu.temperature != null ? "°C" : "",
             minis: [
-              { k: t("load"), v: cpu.load != null ? fmtPct(cpu.load) : "N/A" },
-              { k: "Clock", v: cpu.frequency != null ? fmtMHz(cpu.frequency) : "N/A" },
-              { k: t("power"), v: cpu.power != null ? fmtW(cpu.power) : "N/A" },
-              { k: t("fan"), v: cpu.fanSpeed != null ? fmtRPM(cpu.fanSpeed) : "N/A" },
+              { k: "LOAD", v: fmtPct01(cpu.load) },
+              { k: "CLOCK", v: fmtMHz(cpu.frequency) },
+              { k: "POWER", v: fmtW(cpu.power) },
+              { k: "FAN", v: fmtRPM(cpu.fanSpeed) }
             ]
           });
         });
 
-        gpus.forEach((gpu, i) => {
+        (payload.gpus || []).forEach((gpu, i) => {
           pages.push({
-            chip: `${t("gpuWord")} ${i}`,
-            name: gpu.name || `${t("gpuWord")} ${i}`,
+            chip: `GPU ${i}`,
+            name: gpu.name || `GPU ${i}`,
             big: gpu.temperature != null ? fmtNum(gpu.temperature, 1) : "N/A",
             unit: gpu.temperature != null ? "°C" : "",
             minis: [
-              { k: t("load"), v: gpu.load != null ? fmtPct(gpu.load) : "N/A" },
-              { k: "Clock", v: gpu.frequency != null ? fmtMHz(gpu.frequency) : "N/A" },
-              { k: t("power"), v: gpu.power != null ? fmtW(gpu.power) : "N/A" },
-              { k: t("fan"), v: gpu.fanSpeed != null ? fmtRPM(gpu.fanSpeed) : "N/A" },
+              { k: "LOAD", v: fmtPct01(gpu.load) },
+              { k: "CLOCK", v: fmtMHz(gpu.frequency) },
+              { k: "POWER", v: fmtW(gpu.power) },
+              { k: "FAN", v: fmtRPM(gpu.fanSpeed) }
             ]
           });
         });
 
-        if (ram) {
+        if (payload.ram) {
           pages.push({
-            chip: t("memoryWord").toUpperCase(),
-            name: t("memoryWord"),
-            big: ram.totalSize ? fmtNum((ram.inUse / ram.totalSize) * 100, 0) : "N/A",
-            unit: ram.totalSize ? "%" : "",
+            chip: "RAM",
+            name: "Memory",
+            big: payload.ram.totalSize ? fmtNum((payload.ram.inUse / payload.ram.totalSize) * 100, 0) : "N/A",
+            unit: payload.ram.totalSize ? "%" : "",
             minis: [
-              { k: "Used", v: ram.inUse != null ? fmtMiB(ram.inUse) : "N/A" },
-              { k: "Total", v: ram.totalSize != null ? fmtMiB(ram.totalSize) : "N/A" },
-              { k: "Modules", v: Array.isArray(ram.modules) ? String(ram.modules.length) : "0" },
-              { k: t("payloadPaths"), v: String(payloadSchemaMap.size) },
+              { k: "USED", v: fmtMiB(payload.ram.inUse) },
+              { k: "TOTAL", v: fmtMiB(payload.ram.totalSize) },
+              { k: "MODULES", v: String((payload.ram.modules || []).length) },
+              { k: "SHAPE", v: window.nzxt?.v1?.shape ?? "N/A" }
             ]
           });
         }
 
-        pages.push({
-          chip: t("nzxtWord"),
-          name: "window.nzxt.v1",
-          big: String(runtimeSchemaMap.size),
-          unit: "",
-          minis: [
-            { k: t("width"), v: String(window.nzxt?.v1?.width ?? "N/A") },
-            { k: t("height"), v: String(window.nzxt?.v1?.height ?? "N/A") },
-            { k: t("shape"), v: String(window.nzxt?.v1?.shape ?? "N/A") },
-            { k: t("autoRotate"), v: krakenAutoRotate ? t("on") : t("off") },
-          ]
-        });
+        if (payload.kraken) {
+          pages.push({
+            chip: "KRAKEN",
+            name: "Liquid Temp",
+            big: payload.kraken.liquidTemperature != null ? fmtNum(payload.kraken.liquidTemperature, 1) : "N/A",
+            unit: payload.kraken.liquidTemperature != null ? "°C" : "",
+            minis: [
+              { k: "WIDTH", v: String(window.nzxt?.v1?.width ?? "N/A") },
+              { k: "HEIGHT", v: String(window.nzxt?.v1?.height ?? "N/A") },
+              { k: "FPS", v: String(window.nzxt?.v1?.targetFps ?? "N/A") },
+              { k: "PAYLOADS", v: String(liveCount) }
+            ]
+          });
+        }
 
         return pages;
       }
@@ -2035,13 +1317,12 @@
         if (!krakenPages.length) {
           els.krakenPage.innerHTML = `
             <div class="page-card">
-              <div class="page-chip">${esc(t("waitingCam"))}</div>
-              <div class="page-name">${esc(t("waitingData"))}</div>
+              <div class="page-chip">WAITING</div>
+              <div class="page-name">Waiting for CAM data</div>
             </div>
           `;
           els.krakenPager.innerHTML = "";
-          els.krakenMeta.textContent = t("waitingData");
-          syncKrakenStateToStorage();
+          els.krakenMeta.textContent = "waiting for data...";
           return;
         }
 
@@ -2071,11 +1352,11 @@
           `<span class="pager-dot ${i === krakenIndex ? "active" : ""}"></span>`
         ).join("");
 
-        const mode = krakenAutoRotate ? t("auto") : t("manual");
-        const now = new Date().toLocaleTimeString(I18N[currentLang]?.htmlLang || "en");
-        els.krakenMeta.textContent = I18N[currentLang].krakenMetaTemplate(krakenIndex + 1, krakenPages.length, mode, now);
+        els.krakenMeta.textContent =
+          `${krakenIndex + 1}/${krakenPages.length} • ${krakenAutoRotate ? "AUTO" : "MANUAL"} • ${new Date().toLocaleTimeString("en-US")}`;
+
         els.krakenHeaderSub.textContent =
-          `${window.nzxt?.v1?.width ?? "?"}×${window.nzxt?.v1?.height ?? "?"} • ${window.nzxt?.v1?.shape ?? "?"} • ${currentLang.toUpperCase()}`;
+          `${window.nzxt?.v1?.width ?? "?"}×${window.nzxt?.v1?.height ?? "?"} • ${window.nzxt?.v1?.shape ?? "?"}`;
 
         syncKrakenStateToStorage();
       }
@@ -2086,13 +1367,60 @@
 
         krakenTimer = setInterval(() => {
           if (!krakenAutoRotate) return;
-          if (!krakenPages.length) {
-            krakenPages = buildKrakenPages();
-            if (!krakenPages.length) return;
-          }
+          if (!krakenPages.length) return;
           krakenIndex = (krakenIndex + 1) % krakenPages.length;
           renderKrakenPage();
         }, KRAKEN_ROTATE_MS);
+      }
+
+      function syncKrakenStateToStorage() {
+        try {
+          localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify({
+            index: krakenIndex,
+            autoRotate: krakenAutoRotate,
+            totalPages: krakenPages.length,
+            updatedAt: Date.now()
+          }));
+        } catch {}
+      }
+
+      function renderControllerState() {
+        try {
+          const state = JSON.parse(localStorage.getItem(STORAGE_STATE_KEY) || "null");
+          if (!state) {
+            els.controllerState.textContent = "No Kraken state";
+            return;
+          }
+          els.controllerState.textContent =
+            `page ${state.index + 1}/${state.totalPages} • auto ${state.autoRotate ? "ON" : "OFF"}`;
+          els.btnToggleAuto.textContent = state.autoRotate ? "Auto: ON" : "Auto: OFF";
+        } catch {
+          els.controllerState.textContent = "No Kraken state";
+        }
+      }
+
+      function sendKrakenCommand(type, payload = {}) {
+        try {
+          localStorage.setItem(STORAGE_CMD_KEY, JSON.stringify({
+            type,
+            ...payload,
+            ts: Date.now()
+          }));
+        } catch {}
+      }
+
+      function bindKrakenControls() {
+        els.btnPrev.addEventListener("click", () => sendKrakenCommand("prev"));
+        els.btnNext.addEventListener("click", () => sendKrakenCommand("next"));
+        els.btnPage0.addEventListener("click", () => sendKrakenCommand("setIndex", { index: 0 }));
+
+        els.btnToggleAuto.addEventListener("click", () => {
+          let state = { autoRotate: true };
+          try {
+            state = JSON.parse(localStorage.getItem(STORAGE_STATE_KEY) || '{"autoRotate":true}');
+          } catch {}
+          sendKrakenCommand("setAutoRotate", { value: !state.autoRotate });
+        });
       }
 
       function applyKrakenCommand(command) {
@@ -2106,7 +1434,6 @@
               renderKrakenPage();
             }
             break;
-
           case "prev":
             if (!krakenPages.length) krakenPages = buildKrakenPages();
             if (krakenPages.length) {
@@ -2114,7 +1441,6 @@
               renderKrakenPage();
             }
             break;
-
           case "setIndex":
             if (!krakenPages.length) krakenPages = buildKrakenPages();
             if (krakenPages.length) {
@@ -2125,94 +1451,16 @@
               }
             }
             break;
-
           case "setAutoRotate":
             krakenAutoRotate = Boolean(command.value);
-            updateAutoButtonText();
             renderKrakenPage();
+            renderControllerState();
             break;
-
-          case "setLanguage":
-            if (command.lang && I18N[command.lang]) {
-              setLanguage(command.lang);
-            }
-            break;
-        }
-      }
-
-      function rerenderAll() {
-        applyStaticTexts();
-        sniffNzxtRuntime();
-        renderOverview();
-        renderPayloadSchema();
-        renderRuntimeSchema();
-        renderLatestPayloadRaw();
-        renderLatestRuntimeRaw();
-        renderKrakenPage();
-      }
-
-      function handleMonitoringDataUpdate(data) {
-        markLive();
-        sniffNzxtRuntime();
-        processPayload(data);
-        renderOverview();
-        renderKrakenPage();
-        startKrakenRotation();
-      }
-
-      function installMonitoringHook() {
-        window.nzxt = window.nzxt || {};
-        window.nzxt.v1 = window.nzxt.v1 || {};
-
-        let userHandler = null;
-
-        Object.defineProperty(window.nzxt.v1, "onMonitoringDataUpdate", {
-          configurable: true,
-          enumerable: true,
-          get() {
-            return userHandler;
-          },
-          set(fn) {
-            userHandler = function wrappedMonitoringHandler(data) {
-              try {
-                handleMonitoringDataUpdate(data);
-              } catch (err) {
-                console.error("Sniffer handler error:", err);
-              }
-
-              if (typeof fn === "function") {
-                try {
-                  fn(data);
-                } catch (err) {
-                  console.error("User monitoring handler error:", err);
-                }
-              }
-            };
-          }
-        });
-
-        if (typeof window.nzxt.v1.onMonitoringDataUpdate !== "function") {
-          window.nzxt.v1.onMonitoringDataUpdate = function () {};
-        }
-      }
-
-      function seedCallbackIfNeeded() {
-        if (typeof window.nzxt?.v1?.onMonitoringDataUpdate !== "function") {
-          installMonitoringHook();
         }
       }
 
       window.addEventListener("storage", (event) => {
         if (!event.key) return;
-
-        if (event.key === STORAGE_LANG_KEY) {
-          const nextLang = localStorage.getItem(STORAGE_LANG_KEY);
-          if (nextLang && I18N[nextLang] && nextLang !== currentLang) {
-            currentLang = nextLang;
-            applyStaticTexts();
-            rerenderAll();
-          }
-        }
 
         if (!isKrakenView && event.key === STORAGE_STATE_KEY) {
           renderControllerState();
@@ -2222,27 +1470,23 @@
           try {
             const command = JSON.parse(event.newValue);
             applyKrakenCommand(command);
-          } catch (err) {
-            console.warn("Command parse failed:", err);
-          }
+          } catch {}
         }
       });
 
-      bindControllerButtons();
-      applyStaticTexts();
-      installMonitoringHook();
-      sniffNzxtRuntime();
-      renderOverview();
-      renderKrakenPage();
+      bindCopyButtons();
+      bindKrakenControls();
+      renderControllerState();
 
-      // Periodic runtime sniff for newly added properties on window.nzxt / window.nzxt.v1
+      setupMonitoringHook();
+
+      // Refresh metadata even if payload hasn't changed yet
       setInterval(() => {
-        sniffNzxtRuntime();
-        renderOverview();
-        if (isKrakenView) renderKrakenPage();
+        renderMeta();
+        if (!latestPayload) renderKrakenPage();
       }, 1500);
 
-      // Demo/fallback so the page is testable outside CAM
+      // Demo / fallback outside CAM
       setTimeout(() => {
         const hasRealInfo =
           typeof window.nzxt?.v1?.width !== "undefined" ||
@@ -2251,105 +1495,86 @@
         if (!hasRealInfo) {
           window.nzxt = window.nzxt || {};
           window.nzxt.v1 = window.nzxt.v1 || {};
+
           if (isKrakenView) {
             window.nzxt.v1.width = 640;
             window.nzxt.v1.height = 640;
             window.nzxt.v1.shape = "circle";
-            window.nzxt.v1.targetFps = 30;
+            window.nzxt.v1.targetFps = 40;
           } else {
             window.nzxt.v1.width = 1280;
             window.nzxt.v1.height = 720;
             window.nzxt.v1.shape = "rectangle";
-            window.nzxt.v1.targetFps = 30;
+            window.nzxt.v1.targetFps = 40;
           }
-
-          window.nzxt.v1.demoUndocumented = {
-            hello: true,
-            nested: {
-              alpha: 1,
-              beta: "demo"
-            }
-          };
-
-          seedCallbackIfNeeded();
 
           const demoPayload = {
             cpus: [{
-              name: "Ryzen 7 Demo",
+              name: "Ryzen 7 9800X3D",
               manufacturer: "AMD",
-              codeName: "Demo",
-              socket: "AM5",
-              load: 0.41,
+              codeName: "Granite Ridge",
+              socket: "Socket AM5 (LGA1718)",
+              load: 0.02796614170074463,
               numCores: 8,
               numThreads: 16,
-              temperature: 58.3,
-              minTemperature: 43.1,
-              maxTemperature: 72.5,
-              frequency: 4975,
-              minFrequency: 3600,
-              maxFrequency: 5050,
+              temperature: 42,
+              frequency: 3600,
+              minFrequency: 2323,
+              maxFrequency: 5225,
               stockFrequency: 4700,
-              fanSpeed: 1320,
-              minFanSpeed: 900,
-              maxFanSpeed: 1800,
-              tdp: 105,
-              power: 68.2
+              fanSpeed: 2106,
+              minFanSpeed: 1398,
+              maxFanSpeed: 2903,
+              tdp: 120,
+              power: 24.85525131225586
             }],
             gpus: [{
-              name: "RTX Demo 0",
-              load: 0.73,
-              temperature: 64.7,
-              minTemperature: 49.0,
-              maxTemperature: 71.0,
-              frequency: 2610,
-              minFrequency: 210,
-              maxFrequency: 2790,
-              stockFrequency: 2520,
-              fanSpeed: 1680,
+              name: "NVIDIA GeForce RTX 4060 Ti",
+              load: 0.009999999776482582,
+              temperature: 47,
+              minTemperature: 40,
+              maxTemperature: 69,
+              frequency: 2565,
+              minFrequency: 2565,
+              maxFrequency: 2910,
+              fanSpeed: 0,
               minFanSpeed: 0,
-              maxFanSpeed: 2200,
-              power: 223.4
-            }, {
-              name: "iGPU Demo 1",
-              load: 0.11,
-              temperature: 44.5,
-              minTemperature: 38.2,
-              maxTemperature: 52.1,
-              frequency: 1200,
-              minFrequency: 400,
-              maxFrequency: 2200,
-              stockFrequency: 1500,
-              fanSpeed: null,
-              minFanSpeed: null,
-              maxFanSpeed: null,
-              power: 17.6
+              maxFanSpeed: 2093,
+              power: 23.070999145507812
             }],
             ram: {
-              totalSize: 32768,
-              inUse: 13620,
+              totalSize: 32410,
+              inUse: 10120,
               modules: [
-                { kind: "DDR5", size: 16384, model: "Demo A", frequency: 6000, stockFrequency: 4800 },
-                { kind: "DDR5", size: 16384, model: "Demo B", frequency: 6000, stockFrequency: 4800 }
+                {
+                  kind: "DDR5",
+                  size: 16384,
+                  model: "G.Skill F5-6000J2836G16G",
+                  frequency: 3000,
+                  stockFrequency: 2400
+                },
+                {
+                  kind: "DDR5",
+                  size: 16384,
+                  model: "G.Skill F5-6000J2836G16G",
+                  frequency: 3000,
+                  stockFrequency: 2400
+                }
               ]
             },
             kraken: {
-              liquidTemperature: 33.4
-            },
-            undocumentedExtra: {
-              foo: "bar",
-              answer: 42
+              liquidTemperature: 26
             }
           };
 
-          // Trigger our wrapped callback
           try {
             window.nzxt.v1.onMonitoringDataUpdate(demoPayload);
           } catch (err) {
-            console.error("Demo callback failed:", err);
+            console.error(err);
           }
         } else {
-          // Real CAM path
-          seedCallbackIfNeeded();
+          renderMeta();
+          renderAll();
         }
       }, 600);
     })();
