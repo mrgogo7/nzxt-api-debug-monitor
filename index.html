@@ -1,65 +1,57 @@
-<!doctype html> 
+<!doctype html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>NZXT CAM Live Monitor</title>
   <style>
     :root {
-      --bg: #0b1020;
-      --panel: #121a2b;
-      --panel-2: #0f1727;
-      --text: #e6edf7;
+      --bg: #09111f;
+      --panel: #10192c;
+      --panel2: #0d1526;
+      --text: #ecf3ff;
       --muted: #9fb0cc;
-      --ok: #56d364;
-      --warn: #f2cc60;
-      --accent: #6ea8fe;
-      --line: #24304a;
+      --accent: #7cc7ff;
+      --accent2: #7dffb3;
+      --line: rgba(120, 160, 220, 0.18);
       --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       --sans: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
     * { box-sizing: border-box; }
-
     html, body {
       margin: 0;
-      background: radial-gradient(circle at top, #16203a 0%, var(--bg) 45%);
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top, #162646 0%, #0b1220 40%, #070c15 100%);
       color: var(--text);
       font-family: var(--sans);
-      min-height: 100%;
     }
 
     body {
       padding: 14px;
     }
 
-    .wrap {
+    .hidden { display: none !important; }
+
+    /* NORMAL MODE */
+    .normal-wrap {
       max-width: 1280px;
       margin: 0 auto;
     }
 
-    .topbar {
-      display: grid;
-      gap: 10px;
-      grid-template-columns: 1fr;
-      margin-bottom: 12px;
-    }
-
     .title {
-      background: rgba(18, 26, 43, 0.85);
+      background: rgba(16, 25, 44, 0.88);
       border: 1px solid var(--line);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 14px 16px;
+      margin-bottom: 12px;
       backdrop-filter: blur(8px);
     }
 
     .title h1 {
       margin: 0 0 6px;
       font-size: 20px;
-      line-height: 1.2;
     }
 
     .title p {
@@ -71,23 +63,20 @@
 
     .grid {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1.05fr 0.95fr;
       gap: 12px;
     }
 
     @media (max-width: 960px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
+      .grid { grid-template-columns: 1fr; }
     }
 
     .panel {
-      background: rgba(18, 26, 43, 0.88);
+      background: rgba(16, 25, 44, 0.9);
       border: 1px solid var(--line);
-      border-radius: 16px;
+      border-radius: 18px;
       overflow: hidden;
       backdrop-filter: blur(8px);
-      min-width: 0;
     }
 
     .panel-head {
@@ -97,18 +86,14 @@
       gap: 10px;
       padding: 12px 14px;
       border-bottom: 1px solid var(--line);
-      background: rgba(255,255,255,0.02);
     }
 
     .panel-head h2 {
       margin: 0;
       font-size: 14px;
-      letter-spacing: 0.2px;
     }
 
-    .panel-body {
-      padding: 12px;
-    }
+    .panel-body { padding: 12px; }
 
     .status {
       display: flex;
@@ -124,7 +109,7 @@
       align-items: center;
       gap: 6px;
       border: 1px solid var(--line);
-      background: var(--panel-2);
+      background: var(--panel2);
       padding: 6px 9px;
       border-radius: 999px;
       white-space: nowrap;
@@ -134,13 +119,10 @@
       width: 9px;
       height: 9px;
       border-radius: 50%;
-      background: #666;
-      box-shadow: 0 0 10px rgba(255,255,255,0.15);
-      flex: 0 0 auto;
+      background: #777;
     }
-
-    .dot.live { background: var(--ok); }
-    .dot.wait { background: var(--warn); }
+    .dot.live { background: #58db7b; }
+    .dot.wait { background: #f0c75e; }
 
     .summary-grid {
       display: grid;
@@ -150,11 +132,10 @@
     }
 
     .card {
-      background: var(--panel-2);
+      background: var(--panel2);
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 10px 12px;
-      min-width: 0;
     }
 
     .card .k {
@@ -170,11 +151,6 @@
       word-break: break-word;
     }
 
-    .subtle {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
     .list {
       display: grid;
       gap: 10px;
@@ -184,7 +160,7 @@
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 10px 12px;
-      background: var(--panel-2);
+      background: var(--panel2);
     }
 
     .item h3 {
@@ -206,16 +182,15 @@
     }
 
     .kv div:nth-child(even) {
-      color: var(--text);
       word-break: break-word;
     }
 
     .table-wrap {
-      max-height: 55vh;
+      max-height: 56vh;
       overflow: auto;
       border: 1px solid var(--line);
       border-radius: 14px;
-      background: var(--panel-2);
+      background: var(--panel2);
     }
 
     table {
@@ -238,14 +213,10 @@
     }
 
     tbody td {
-      border-bottom: 1px solid rgba(36, 48, 74, 0.7);
+      border-bottom: 1px solid rgba(120, 160, 220, 0.12);
       padding: 8px 10px;
       vertical-align: top;
       word-break: break-word;
-    }
-
-    tbody tr:hover td {
-      background: rgba(255,255,255,0.02);
     }
 
     td.path {
@@ -273,7 +244,7 @@
       font-family: var(--mono);
       max-height: 55vh;
       overflow: auto;
-      background: var(--panel-2);
+      background: var(--panel2);
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
@@ -286,21 +257,187 @@
       line-height: 1.5;
     }
 
-    .mono { font-family: var(--mono); }
+    /* KRAKEN MODE */
+    body.kraken {
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .kraken-stage {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, #0f1d35 0%, #08111e 58%, #03060b 100%);
+    }
+
+    .kraken-circle {
+      width: min(100vw, 100vh);
+      height: min(100vw, 100vh);
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(124,199,255,0.12), transparent 35%),
+        radial-gradient(circle at 70% 75%, rgba(125,255,179,0.10), transparent 35%),
+        radial-gradient(circle at center, #0e1830 0%, #08101f 64%, #03070d 100%);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .kraken-safe {
+      position: absolute;
+      inset: 74px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 8px;
+    }
+
+    .kraken-header {
+      text-align: center;
+      padding-top: 6px;
+    }
+
+    .kraken-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+
+    .kraken-sub {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .kraken-page {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      padding: 10px 0;
+    }
+
+    .page-card {
+      width: 100%;
+      text-align: center;
+      display: grid;
+      gap: 10px;
+      align-content: center;
+      justify-items: center;
+    }
+
+    .page-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(124,199,255,0.22);
+      background: rgba(255,255,255,0.03);
+      color: #dfeeff;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.35px;
+    }
+
+    .page-name {
+      font-size: 28px;
+      line-height: 1.1;
+      font-weight: 800;
+      max-width: 88%;
+      word-break: break-word;
+    }
+
+    .big-value {
+      font-size: 86px;
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: -2px;
+      color: #ffffff;
+      text-shadow: 0 0 26px rgba(124,199,255,0.14);
+    }
+
+    .big-unit {
+      font-size: 24px;
+      color: var(--accent);
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
+    .mini-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .mini {
+      border: 1px solid rgba(124,199,255,0.14);
+      background: rgba(255,255,255,0.025);
+      border-radius: 16px;
+      padding: 10px 8px;
+    }
+
+    .mini .k {
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .mini .v {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .kraken-footer {
+      text-align: center;
+      padding-bottom: 8px;
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+    }
+
+    .pager {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pager-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+    }
+
+    .pager-dot.active {
+      background: var(--accent2);
+      box-shadow: 0 0 12px rgba(125,255,179,0.6);
+    }
+
+    .kraken-meta {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="title">
-        <h1>NZXT CAM Web Integration — Canlı API Görüntüleyici</h1>
-        <p>
-          Bu sayfa, NZXT CAM'in <span class="mono">window.nzxt.v1.onMonitoringDataUpdate</span>
-          callback'i üzerinden gelen canlı veriyi gösterir. Özellikle çoklu GPU desteği için
-          <span class="mono">gpus[0]</span>, <span class="mono">gpus[1]</span> vb. indeksler
-          ayrı ayrı listelenir.
-        </p>
-      </div>
+  <!-- NORMAL MODE -->
+  <div id="normalApp" class="normal-wrap">
+    <div class="title">
+      <h1>NZXT CAM Web Integration — Canlı API Görüntüleyici</h1>
+      <p>
+        Normal görünüm tüm alanları ayrıntılı gösterir. <b>?kraken=1</b> modunda ise yuvarlak
+        640x640 ekran için otomatik sadeleştirilmiş sayfa görünümü kullanılır.
+      </p>
     </div>
 
     <div class="grid">
@@ -308,22 +445,17 @@
         <div class="panel-head">
           <h2>Özet / Algılanan Sensörler</h2>
           <div class="status">
-            <span class="badge">
-              <span id="liveDot" class="dot wait"></span>
-              <span id="liveText">CAM verisi bekleniyor...</span>
-            </span>
+            <span class="badge"><span id="liveDot" class="dot wait"></span><span id="liveText">CAM verisi bekleniyor...</span></span>
             <span class="badge">Güncelleme: <span id="lastUpdate">-</span></span>
             <span class="badge">Kraken görünümü: <span id="krakenMode">-</span></span>
           </div>
         </div>
         <div class="panel-body">
           <div class="summary-grid" id="summary"></div>
-
           <div class="list" id="sensorCards"></div>
-
           <div class="footer-note">
-            İpucu: Normal tarayıcıda açarsan gerçek CAM verisi gelmez. Gerçek veri için NZXT CAM içinde
-            Web Integration olarak bu URL'yi yüklemelisin.
+            Normal tarayıcıda gerçek CAM verisi gelmez. Kraken modunu görmek için URL sonuna
+            <span style="font-family:var(--mono)">?kraken=1</span> ekleyebilirsin.
           </div>
         </div>
       </section>
@@ -353,17 +485,43 @@
     </div>
 
     <section class="panel" style="margin-top:12px;">
-      <div class="panel-head">
-        <h2>Ham JSON</h2>
-      </div>
+      <div class="panel-head"><h2>Ham JSON</h2></div>
       <div class="panel-body">
         <pre id="rawJson">Henüz veri yok.</pre>
       </div>
     </section>
   </div>
 
+  <!-- KRAKEN MODE -->
+  <div id="krakenApp" class="kraken-stage hidden">
+    <div class="kraken-circle">
+      <div class="kraken-safe">
+        <div class="kraken-header">
+          <div class="kraken-title">NZXT CAM</div>
+          <div id="krakenHeaderSub" class="kraken-sub">640×640 circle</div>
+        </div>
+
+        <div class="kraken-page">
+          <div id="krakenPage" class="page-card"></div>
+        </div>
+
+        <div class="kraken-footer">
+          <div id="krakenPager" class="pager"></div>
+          <div id="krakenMeta" class="kraken-meta">veri bekleniyor...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
+      const isKrakenView = new URLSearchParams(location.search).get("kraken") === "1";
+      if (isKrakenView) {
+        document.body.classList.add("kraken");
+        document.getElementById("normalApp").classList.add("hidden");
+        document.getElementById("krakenApp").classList.remove("hidden");
+      }
+
       const els = {
         liveDot: document.getElementById("liveDot"),
         liveText: document.getElementById("liveText"),
@@ -374,48 +532,52 @@
         flatBody: document.getElementById("flatBody"),
         rowCount: document.getElementById("rowCount"),
         rawJson: document.getElementById("rawJson"),
+
+        krakenPage: document.getElementById("krakenPage"),
+        krakenPager: document.getElementById("krakenPager"),
+        krakenMeta: document.getElementById("krakenMeta"),
+        krakenHeaderSub: document.getElementById("krakenHeaderSub"),
       };
 
-      const isKrakenView = new URLSearchParams(location.search).get("kraken") === "1";
-      els.krakenMode.textContent = isKrakenView ? "Evet (?kraken=1)" : "Hayır";
+      let latestData = null;
+      let krakenPages = [];
+      let krakenIndex = 0;
+      let krakenTimer = null;
 
-      function fmtNumber(v, digits = 0) {
+      function fmtNum(v, digits = 0) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return Number(v).toFixed(digits);
       }
-
-      function fmtPercent01(v) {
+      function fmtPct(v) {
+        if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
+        return `${(Number(v) * 100).toFixed(0)}%`;
+      }
+      function fmtPct1(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${(Number(v) * 100).toFixed(1)}%`;
       }
-
       function fmtTemp(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
-        return `${Number(v).toFixed(1)} °C`;
+        return `${Number(v).toFixed(1)}°C`;
       }
-
       function fmtMHz(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${Number(v).toFixed(0)} MHz`;
       }
-
       function fmtRPM(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${Number(v).toFixed(0)} RPM`;
       }
-
       function fmtW(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${Number(v).toFixed(1)} W`;
       }
-
       function fmtMiB(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${Number(v).toFixed(0)} MiB`;
       }
-
-      function escapeHtml(value) {
-        return String(value)
+      function esc(s) {
+        return String(s)
           .replaceAll("&", "&amp;")
           .replaceAll("<", "&lt;")
           .replaceAll(">", "&gt;")
@@ -423,35 +585,40 @@
           .replaceAll("'", "&#39;");
       }
 
-      function renderSummary(data) {
-        const v1 = window.nzxt && window.nzxt.v1 ? window.nzxt.v1 : {};
-        const cpuCount = Array.isArray(data.cpus) ? data.cpus.length : 0;
-        const gpuCount = Array.isArray(data.gpus) ? data.gpus.length : 0;
-        const ramModules = data.ram && Array.isArray(data.ram.modules) ? data.ram.modules.length : 0;
-
-        const cards = [
-          ["CPU sayısı", cpuCount],
-          ["GPU sayısı", gpuCount],
-          ["RAM modülü", ramModules],
-          ["Sıvı sıcaklığı", fmtTemp(data.kraken?.liquidTemperature)],
-          ["Ekran çözünürlüğü", `${v1.width ?? "?"} × ${v1.height ?? "?"}`],
-          ["Şekil", v1.shape ?? "N/A"],
-          ["Target FPS", v1.targetFps ?? "N/A"],
-          ["RAM kullanım", data.ram ? `${fmtMiB(data.ram.inUse)} / ${fmtMiB(data.ram.totalSize)}` : "N/A"],
-        ];
-
-        els.summary.innerHTML = cards.map(([k, v]) => `
-          <div class="card">
-            <div class="k">${escapeHtml(k)}</div>
-            <div class="v">${escapeHtml(v)}</div>
-          </div>
-        `).join("");
+      function markLive() {
+        if (els.liveDot) {
+          els.liveDot.classList.remove("wait");
+          els.liveDot.classList.add("live");
+        }
+        if (els.liveText) els.liveText.textContent = "CAM verisi alınıyor";
+        if (els.lastUpdate) els.lastUpdate.textContent = new Date().toLocaleTimeString("tr-TR");
+        if (els.krakenMode) els.krakenMode.textContent = isKrakenView ? "Evet (?kraken=1)" : "Hayır";
       }
 
       function pairRows(obj) {
         return Object.entries(obj).map(([k, v]) => `
-          <div>${escapeHtml(k)}</div>
-          <div>${escapeHtml(v)}</div>
+          <div>${esc(k)}</div>
+          <div>${esc(v)}</div>
+        `).join("");
+      }
+
+      function renderSummary(data) {
+        const v1 = window.nzxt?.v1 || {};
+        const cards = [
+          ["CPU sayısı", Array.isArray(data.cpus) ? data.cpus.length : 0],
+          ["GPU sayısı", Array.isArray(data.gpus) ? data.gpus.length : 0],
+          ["RAM modülü", Array.isArray(data.ram?.modules) ? data.ram.modules.length : 0],
+          ["Sıvı sıcaklığı", fmtTemp(data.kraken?.liquidTemperature)],
+          ["Ekran", `${v1.width ?? "?"} × ${v1.height ?? "?"}`],
+          ["Shape", v1.shape ?? "N/A"],
+          ["Target FPS", v1.targetFps ?? "N/A"],
+          ["RAM kullanım", data.ram ? `${fmtMiB(data.ram.inUse)} / ${fmtMiB(data.ram.totalSize)}` : "N/A"],
+        ];
+        els.summary.innerHTML = cards.map(([k, v]) => `
+          <div class="card">
+            <div class="k">${esc(k)}</div>
+            <div class="v">${esc(v)}</div>
+          </div>
         `).join("");
       }
 
@@ -462,13 +629,13 @@
           data.cpus.forEach((cpu, i) => {
             parts.push(`
               <div class="item">
-                <h3>CPU ${i} — ${escapeHtml(cpu.name || "Bilinmiyor")}</h3>
+                <h3>CPU ${i} — ${esc(cpu.name || "Bilinmiyor")}</h3>
                 <div class="kv">
                   ${pairRows({
                     "manufacturer": cpu.manufacturer ?? "N/A",
                     "codeName": cpu.codeName ?? "N/A",
                     "socket": cpu.socket ?? "N/A",
-                    "load": fmtPercent01(cpu.load),
+                    "load": fmtPct1(cpu.load),
                     "temperature": fmtTemp(cpu.temperature),
                     "minTemperature": fmtTemp(cpu.minTemperature),
                     "maxTemperature": fmtTemp(cpu.maxTemperature),
@@ -494,11 +661,11 @@
           data.gpus.forEach((gpu, i) => {
             parts.push(`
               <div class="item">
-                <h3>GPU ${i} (gpus[${i}]) — ${escapeHtml(gpu.name || "Bilinmiyor")}</h3>
+                <h3>GPU ${i} (gpus[${i}]) — ${esc(gpu.name || "Bilinmiyor")}</h3>
                 <div class="kv">
                   ${pairRows({
                     "name": gpu.name ?? "N/A",
-                    "load": fmtPercent01(gpu.load),
+                    "load": fmtPct1(gpu.load),
                     "temperature": fmtTemp(gpu.temperature),
                     "minTemperature": fmtTemp(gpu.minTemperature),
                     "maxTemperature": fmtTemp(gpu.maxTemperature),
@@ -531,24 +698,22 @@
             </div>
           `);
 
-          if (Array.isArray(data.ram.modules)) {
-            data.ram.modules.forEach((mod, i) => {
-              parts.push(`
-                <div class="item">
-                  <h3>RAM Module ${i} (ram.modules[${i}])</h3>
-                  <div class="kv">
-                    ${pairRows({
-                      "kind": mod.kind ?? "N/A",
-                      "size": fmtMiB(mod.size),
-                      "model": mod.model ?? "N/A",
-                      "frequency": fmtMHz(mod.frequency),
-                      "stockFrequency": fmtMHz(mod.stockFrequency),
-                    })}
-                  </div>
+          (data.ram.modules || []).forEach((mod, i) => {
+            parts.push(`
+              <div class="item">
+                <h3>RAM Module ${i}</h3>
+                <div class="kv">
+                  ${pairRows({
+                    "kind": mod.kind ?? "N/A",
+                    "size": fmtMiB(mod.size),
+                    "model": mod.model ?? "N/A",
+                    "frequency": fmtMHz(mod.frequency),
+                    "stockFrequency": fmtMHz(mod.stockFrequency),
+                  })}
                 </div>
-              `);
-            });
-          }
+              </div>
+            `);
+          });
         }
 
         if (data.kraken) {
@@ -557,95 +722,37 @@
               <h3>Kraken</h3>
               <div class="kv">
                 ${pairRows({
-                  "liquidTemperature": fmtTemp(data.kraken.liquidTemperature),
+                  "liquidTemperature": fmtTemp(data.kraken.liquidTemperature)
                 })}
               </div>
             </div>
           `);
         }
 
-        const v1 = window.nzxt && window.nzxt.v1 ? window.nzxt.v1 : {};
-        parts.push(`
-          <div class="item">
-            <h3>window.nzxt.v1</h3>
-            <div class="kv">
-              ${pairRows({
-                "width": v1.width ?? "N/A",
-                "height": v1.height ?? "N/A",
-                "shape": v1.shape ?? "N/A",
-                "targetFps": v1.targetFps ?? "N/A",
-              })}
-            </div>
-          </div>
-        `);
-
         els.sensorCards.innerHTML = parts.join("");
       }
 
       function flatten(value, path = "", out = []) {
         if (Array.isArray(value)) {
-          if (value.length === 0) {
-            out.push({ path, type: "array", value: "[]" });
-          } else {
-            value.forEach((item, index) => {
-              flatten(item, `${path}[${index}]`, out);
-            });
-          }
+          if (!value.length) out.push({ path, type: "array", value: "[]" });
+          else value.forEach((item, i) => flatten(item, `${path}[${i}]`, out));
           return out;
         }
-
         if (value && typeof value === "object") {
           const keys = Object.keys(value);
-          if (keys.length === 0) {
-            out.push({ path, type: "object", value: "{}" });
-          } else {
-            for (const key of keys) {
-              const next = path ? `${path}.${key}` : key;
-              flatten(value[key], next, out);
-            }
-          }
+          if (!keys.length) out.push({ path, type: "object", value: "{}" });
+          else keys.forEach((k) => flatten(value[k], path ? `${path}.${k}` : k, out));
           return out;
         }
-
-        let type = value === null ? "null" : typeof value;
-        let rendered = value;
-        if (typeof value === "string") rendered = value;
-        else if (typeof value === "number" || typeof value === "boolean") rendered = String(value);
-        else if (value === null) rendered = "null";
-        else if (value === undefined) rendered = "undefined";
-
-        out.push({ path: path || "(root)", type, value: rendered });
+        out.push({
+          path: path || "(root)",
+          type: value === null ? "null" : typeof value,
+          value: value === undefined ? "undefined" : String(value)
+        });
         return out;
       }
 
       function renderFlatTable(data) {
-        const combined = {
-          window: {
-            nzxt: {
-              v1: {
-                width: window.nzxt?.v1?.width ?? null,
-                height: window.nzxt?.v1?.height ?? null,
-                shape: window.nzxt?.v1?.shape ?? null,
-                targetFps: window.nzxt?.v1?.targetFps ?? null,
-              }
-            }
-          },
-          monitoringData: data
-        };
-
-        const rows = flatten(combined);
-        els.rowCount.textContent = rows.length;
-
-        els.flatBody.innerHTML = rows.map(row => `
-          <tr>
-            <td class="path">${escapeHtml(row.path)}</td>
-            <td class="type">${escapeHtml(row.type)}</td>
-            <td class="value">${escapeHtml(row.value)}</td>
-          </tr>
-        `).join("");
-      }
-
-      function renderRawJson(data) {
         const payload = {
           windowNzxtV1: {
             width: window.nzxt?.v1?.width ?? null,
@@ -655,125 +762,272 @@
           },
           monitoringData: data
         };
-        els.rawJson.textContent = JSON.stringify(payload, null, 2);
+        const rows = flatten(payload);
+        els.rowCount.textContent = rows.length;
+        els.flatBody.innerHTML = rows.map((r) => `
+          <tr>
+            <td class="path">${esc(r.path)}</td>
+            <td class="type">${esc(r.type)}</td>
+            <td class="value">${esc(r.value)}</td>
+          </tr>
+        `).join("");
       }
 
-      function markLive() {
-        els.liveDot.classList.remove("wait");
-        els.liveDot.classList.add("live");
-        els.liveText.textContent = "CAM verisi alınıyor";
-        els.lastUpdate.textContent = new Date().toLocaleTimeString("tr-TR");
+      function renderRawJson(data) {
+        els.rawJson.textContent = JSON.stringify({
+          windowNzxtV1: {
+            width: window.nzxt?.v1?.width ?? null,
+            height: window.nzxt?.v1?.height ?? null,
+            shape: window.nzxt?.v1?.shape ?? null,
+            targetFps: window.nzxt?.v1?.targetFps ?? null,
+          },
+          monitoringData: data
+        }, null, 2);
+      }
+
+      function buildKrakenPages(data) {
+        const pages = [];
+
+        const cpus = Array.isArray(data.cpus) ? data.cpus : [];
+        const gpus = Array.isArray(data.gpus) ? data.gpus : [];
+        const ram = data.ram || null;
+        const kraken = data.kraken || null;
+
+        // overview
+        pages.push({
+          chip: "OVERVIEW",
+          name: "Sistem Özeti",
+          big: `${cpus.length} CPU / ${gpus.length} GPU`,
+          unit: "",
+          minis: [
+            { k: "RAM", v: ram ? `${fmtMiB(ram.inUse)} / ${fmtMiB(ram.totalSize)}` : "N/A" },
+            { k: "LIQUID", v: fmtTemp(kraken?.liquidTemperature) },
+            { k: "SHAPE", v: window.nzxt?.v1?.shape ?? "N/A" },
+            { k: "FPS", v: String(window.nzxt?.v1?.targetFps ?? "N/A") },
+          ]
+        });
+
+        // CPU pages
+        cpus.forEach((cpu, i) => {
+          pages.push({
+            chip: `CPU ${i}`,
+            name: cpu.name || `CPU ${i}`,
+            big: fmtNum(cpu.temperature, 1),
+            unit: "°C",
+            minis: [
+              { k: "LOAD", v: fmtPct(cpu.load) },
+              { k: "CLOCK", v: fmtMHz(cpu.frequency) },
+              { k: "POWER", v: fmtW(cpu.power) },
+              { k: "FAN", v: fmtRPM(cpu.fanSpeed) },
+            ]
+          });
+        });
+
+        // GPU pages
+        gpus.forEach((gpu, i) => {
+          pages.push({
+            chip: `GPU ${i}`,
+            name: gpu.name || `GPU ${i}`,
+            big: fmtNum(gpu.temperature, 1),
+            unit: "°C",
+            minis: [
+              { k: "LOAD", v: fmtPct(gpu.load) },
+              { k: "CLOCK", v: fmtMHz(gpu.frequency) },
+              { k: "POWER", v: fmtW(gpu.power) },
+              { k: "FAN", v: fmtRPM(gpu.fanSpeed) },
+            ]
+          });
+        });
+
+        // RAM
+        if (ram) {
+          pages.push({
+            chip: "RAM",
+            name: "Bellek",
+            big: fmtNum((ram.inUse / ram.totalSize) * 100, 0),
+            unit: "%",
+            minis: [
+              { k: "USED", v: fmtMiB(ram.inUse) },
+              { k: "TOTAL", v: fmtMiB(ram.totalSize) },
+              { k: "MODULES", v: String((ram.modules || []).length) },
+              { k: "TYPE", v: ram.modules?.[0]?.kind ?? "N/A" },
+            ]
+          });
+        }
+
+        // Kraken
+        if (kraken) {
+          pages.push({
+            chip: "KRAKEN",
+            name: "Liquid Temp",
+            big: fmtNum(kraken.liquidTemperature, 1),
+            unit: "°C",
+            minis: [
+              { k: "WIDTH", v: String(window.nzxt?.v1?.width ?? "N/A") },
+              { k: "HEIGHT", v: String(window.nzxt?.v1?.height ?? "N/A") },
+              { k: "SHAPE", v: window.nzxt?.v1?.shape ?? "N/A" },
+              { k: "GPU COUNT", v: String(gpus.length) },
+            ]
+          });
+        }
+
+        return pages;
+      }
+
+      function renderKrakenPage() {
+        if (!isKrakenView || !els.krakenPage) return;
+        if (!krakenPages.length) {
+          els.krakenPage.innerHTML = `
+            <div class="page-card">
+              <div class="page-chip">WAITING</div>
+              <div class="page-name">CAM verisi bekleniyor</div>
+            </div>
+          `;
+          els.krakenPager.innerHTML = "";
+          els.krakenMeta.textContent = "henüz veri yok";
+          return;
+        }
+
+        const page = krakenPages[krakenIndex];
+        els.krakenPage.innerHTML = `
+          <div class="page-card">
+            <div class="page-chip">${esc(page.chip)}</div>
+            <div class="page-name">${esc(page.name)}</div>
+            <div>
+              <span class="big-value">${esc(page.big)}</span>
+              ${page.unit ? `<span class="big-unit">${esc(page.unit)}</span>` : ""}
+            </div>
+            <div class="mini-grid">
+              ${page.minis.map(m => `
+                <div class="mini">
+                  <div class="k">${esc(m.k)}</div>
+                  <div class="v">${esc(m.v)}</div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+
+        els.krakenPager.innerHTML = krakenPages.map((_, i) =>
+          `<span class="pager-dot ${i === krakenIndex ? "active" : ""}"></span>`
+        ).join("");
+
+        const now = new Date().toLocaleTimeString("tr-TR");
+        els.krakenMeta.textContent = `${krakenIndex + 1}/${krakenPages.length} • ${now}`;
+        els.krakenHeaderSub.textContent =
+          `${window.nzxt?.v1?.width ?? "?"}×${window.nzxt?.v1?.height ?? "?"} • ${window.nzxt?.v1?.shape ?? "?"}`;
+      }
+
+      function restartKrakenRotation() {
+        if (!isKrakenView) return;
+        if (krakenTimer) clearInterval(krakenTimer);
+        renderKrakenPage();
+        krakenTimer = setInterval(() => {
+          if (!krakenPages.length) return;
+          krakenIndex = (krakenIndex + 1) % krakenPages.length;
+          renderKrakenPage();
+        }, 3500);
       }
 
       function handleData(data) {
+        latestData = data;
         markLive();
-        renderSummary(data);
-        renderSensorCards(data);
-        renderFlatTable(data);
-        renderRawJson(data);
+
+        if (!isKrakenView) {
+          renderSummary(data);
+          renderSensorCards(data);
+          renderFlatTable(data);
+          renderRawJson(data);
+        } else {
+          krakenPages = buildKrakenPages(data);
+          if (krakenIndex >= krakenPages.length) krakenIndex = 0;
+          restartKrakenRotation();
+        }
       }
 
       window.nzxt = window.nzxt || {};
       window.nzxt.v1 = window.nzxt.v1 || {};
       window.nzxt.v1.onMonitoringDataUpdate = handleData;
 
-      // CAM dışı normal tarayıcıda boş ekran olmasın diye demo veri:
-      if (!location.search.includes("kraken=1")) {
-        setTimeout(() => {
-          const hasRealValues =
-            window.nzxt &&
-            window.nzxt.v1 &&
-            typeof window.nzxt.v1.width !== "undefined";
+      // CAM dışında demo veri
+      setTimeout(() => {
+        const hasRealWindow =
+          typeof window.nzxt?.v1?.width !== "undefined" ||
+          typeof window.nzxt?.v1?.height !== "undefined";
 
-          // Gerçek CAM içindeyse kısa süre sonra zaten gerçek veri gelir.
-          // Dışarıda bakarken örnek veri gösterelim.
-          if (!hasRealValues) {
-            handleData({
-              cpus: [
-                {
-                  name: "Demo CPU",
-                  manufacturer: "Demo Manufacturer",
-                  codeName: "Demo CodeName",
-                  socket: "Demo Socket",
-                  load: 0.37,
-                  numCores: 8,
-                  numThreads: 16,
-                  temperature: 56.2,
-                  minTemperature: 42.1,
-                  maxTemperature: 71.4,
-                  frequency: 4850,
-                  minFrequency: 3600,
-                  maxFrequency: 5050,
-                  stockFrequency: 4700,
-                  fanSpeed: 1350,
-                  minFanSpeed: 900,
-                  maxFanSpeed: 1800,
-                  tdp: 105,
-                  power: 62.5
-                }
-              ],
-              gpus: [
-                {
-                  name: "Demo GPU 0",
-                  load: 0.74,
-                  temperature: 63.1,
-                  minTemperature: 48.0,
-                  maxTemperature: 71.5,
-                  frequency: 2520,
-                  minFrequency: 210,
-                  maxFrequency: 2790,
-                  stockFrequency: 2500,
-                  fanSpeed: 1650,
-                  minFanSpeed: 0,
-                  maxFanSpeed: 2200,
-                  power: 214.3
-                },
-                {
-                  name: "Demo GPU 1 / iGPU",
-                  load: 0.05,
-                  temperature: 44.2,
-                  minTemperature: 38.4,
-                  maxTemperature: 51.0,
-                  frequency: 1200,
-                  minFrequency: 400,
-                  maxFrequency: 2200,
-                  stockFrequency: 1500,
-                  fanSpeed: null,
-                  minFanSpeed: null,
-                  maxFanSpeed: null,
-                  power: 16.7
-                }
-              ],
-              ram: {
-                totalSize: 32768,
-                inUse: 12840,
-                modules: [
-                  {
-                    kind: "DDR5",
-                    size: 16384,
-                    model: "Demo RAM A",
-                    frequency: 6000,
-                    stockFrequency: 4800
-                  },
-                  {
-                    kind: "DDR5",
-                    size: 16384,
-                    model: "Demo RAM B",
-                    frequency: 6000,
-                    stockFrequency: 4800
-                  }
-                ]
-              },
-              kraken: {
-                liquidTemperature: 32.8
-              }
-            });
-            els.liveText.textContent = "Demo veri gösteriliyor (CAM dışında)";
-            els.liveDot.classList.remove("live");
-            els.liveDot.classList.add("wait");
+        if (!latestData) {
+          if (isKrakenView && !hasRealWindow) {
+            window.nzxt.v1.width = 640;
+            window.nzxt.v1.height = 640;
+            window.nzxt.v1.shape = "circle";
+            window.nzxt.v1.targetFps = 30;
           }
-        }, 600);
-      }
+
+          handleData({
+            cpus: [{
+              name: "Ryzen 7 Demo",
+              manufacturer: "AMD",
+              codeName: "Demo",
+              socket: "AM5",
+              load: 0.41,
+              numCores: 8,
+              numThreads: 16,
+              temperature: 58.3,
+              minTemperature: 43.1,
+              maxTemperature: 72.5,
+              frequency: 4975,
+              minFrequency: 3600,
+              maxFrequency: 5050,
+              stockFrequency: 4700,
+              fanSpeed: 1320,
+              minFanSpeed: 900,
+              maxFanSpeed: 1800,
+              tdp: 105,
+              power: 68.2
+            }],
+            gpus: [{
+              name: "RTX Demo 0",
+              load: 0.73,
+              temperature: 64.7,
+              minTemperature: 49.0,
+              maxTemperature: 71.0,
+              frequency: 2610,
+              minFrequency: 210,
+              maxFrequency: 2790,
+              stockFrequency: 2520,
+              fanSpeed: 1680,
+              minFanSpeed: 0,
+              maxFanSpeed: 2200,
+              power: 223.4
+            }, {
+              name: "iGPU Demo 1",
+              load: 0.11,
+              temperature: 44.5,
+              minTemperature: 38.2,
+              maxTemperature: 52.1,
+              frequency: 1200,
+              minFrequency: 400,
+              maxFrequency: 2200,
+              stockFrequency: 1500,
+              fanSpeed: null,
+              minFanSpeed: null,
+              maxFanSpeed: null,
+              power: 17.6
+            }],
+            ram: {
+              totalSize: 32768,
+              inUse: 13620,
+              modules: [
+                { kind: "DDR5", size: 16384, model: "Demo A", frequency: 6000, stockFrequency: 4800 },
+                { kind: "DDR5", size: 16384, model: "Demo B", frequency: 6000, stockFrequency: 4800 }
+              ]
+            },
+            kraken: {
+              liquidTemperature: 33.4
+            }
+          });
+        }
+      }, 600);
     })();
   </script>
 </body>
