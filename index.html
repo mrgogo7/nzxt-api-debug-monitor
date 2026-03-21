@@ -19,6 +19,7 @@
     }
 
     * { box-sizing: border-box; }
+
     html, body {
       margin: 0;
       min-height: 100%;
@@ -86,6 +87,7 @@
       gap: 10px;
       padding: 12px 14px;
       border-bottom: 1px solid var(--line);
+      flex-wrap: wrap;
     }
 
     .panel-head h2 {
@@ -120,7 +122,9 @@
       height: 9px;
       border-radius: 50%;
       background: #777;
+      box-shadow: 0 0 10px rgba(255,255,255,0.15);
     }
+
     .dot.live { background: #58db7b; }
     .dot.wait { background: #f0c75e; }
 
@@ -255,6 +259,33 @@
       color: var(--muted);
       font-size: 12px;
       line-height: 1.5;
+    }
+
+    .controller-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--panel2);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font: inherit;
+      cursor: pointer;
+      transition: 120ms ease;
+    }
+
+    button:hover {
+      border-color: rgba(124,199,255,0.4);
+      background: rgba(255,255,255,0.05);
+    }
+
+    button:active {
+      transform: translateY(1px);
     }
 
     /* KRAKEN MODE */
@@ -393,6 +424,7 @@
       font-size: 22px;
       font-weight: 800;
       line-height: 1.1;
+      word-break: break-word;
     }
 
     .kraken-footer {
@@ -408,6 +440,7 @@
       gap: 8px;
       align-items: center;
       justify-content: center;
+      min-height: 8px;
     }
 
     .pager-dot {
@@ -435,10 +468,28 @@
     <div class="title">
       <h1>NZXT CAM Web Integration — Canlı API Görüntüleyici</h1>
       <p>
-        Normal görünüm tüm alanları ayrıntılı gösterir. <b>?kraken=1</b> modunda ise yuvarlak
-        640x640 ekran için otomatik sadeleştirilmiş sayfa görünümü kullanılır.
+        Normal görünüm tüm verileri ayrıntılı gösterir. <b>?kraken=1</b> modunda ise yuvarlak
+        640x640 ekran için otomatik sadeleştirilmiş, sayfalı görünüm açılır. Ayrıca bu sayfadan
+        Kraken görünümünü uzaktan kontrol edebilirsin.
       </p>
     </div>
+
+    <section class="panel" style="margin-bottom:12px;">
+      <div class="panel-head">
+        <h2>Kraken Kontrol</h2>
+        <div class="status">
+          <span class="badge">Remote state: <span id="controllerState">-</span></span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="controller-buttons">
+          <button id="btnPrev" type="button">◀ Prev</button>
+          <button id="btnNext" type="button">Next ▶</button>
+          <button id="btnToggleAuto" type="button">Auto: ON</button>
+          <button id="btnPage0" type="button">Go Overview</button>
+        </div>
+      </div>
+    </section>
 
     <div class="grid">
       <section class="panel">
@@ -454,7 +505,7 @@
           <div class="summary-grid" id="summary"></div>
           <div class="list" id="sensorCards"></div>
           <div class="footer-note">
-            Normal tarayıcıda gerçek CAM verisi gelmez. Kraken modunu görmek için URL sonuna
+            Normal tarayıcıda gerçek CAM verisi gelmeyebilir. Kraken görünümünü test etmek için URL sonuna
             <span style="font-family:var(--mono)">?kraken=1</span> ekleyebilirsin.
           </div>
         </div>
@@ -516,11 +567,16 @@
   <script>
     (function () {
       const isKrakenView = new URLSearchParams(location.search).get("kraken") === "1";
+
       if (isKrakenView) {
         document.body.classList.add("kraken");
         document.getElementById("normalApp").classList.add("hidden");
         document.getElementById("krakenApp").classList.remove("hidden");
       }
+
+      const STORAGE_STATE_KEY = "nzxt.kraken.state";
+      const STORAGE_CMD_KEY = "nzxt.kraken.command";
+      const KRAKEN_ROTATE_MS = 3500;
 
       const els = {
         liveDot: document.getElementById("liveDot"),
@@ -533,6 +589,12 @@
         rowCount: document.getElementById("rowCount"),
         rawJson: document.getElementById("rawJson"),
 
+        controllerState: document.getElementById("controllerState"),
+        btnPrev: document.getElementById("btnPrev"),
+        btnNext: document.getElementById("btnNext"),
+        btnToggleAuto: document.getElementById("btnToggleAuto"),
+        btnPage0: document.getElementById("btnPage0"),
+
         krakenPage: document.getElementById("krakenPage"),
         krakenPager: document.getElementById("krakenPager"),
         krakenMeta: document.getElementById("krakenMeta"),
@@ -543,41 +605,50 @@
       let krakenPages = [];
       let krakenIndex = 0;
       let krakenTimer = null;
+      let krakenAutoRotate = true;
 
       function fmtNum(v, digits = 0) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return Number(v).toFixed(digits);
       }
+
       function fmtPct(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${(Number(v) * 100).toFixed(0)}%`;
       }
+
       function fmtPct1(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${(Number(v) * 100).toFixed(1)}%`;
       }
+
       function fmtTemp(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${Number(v).toFixed(1)}°C`;
       }
+
       function fmtMHz(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${Number(v).toFixed(0)} MHz`;
       }
+
       function fmtRPM(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${Number(v).toFixed(0)} RPM`;
       }
+
       function fmtW(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${Number(v).toFixed(1)} W`;
       }
+
       function fmtMiB(v) {
         if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
         return `${Number(v).toFixed(0)} MiB`;
       }
-      function esc(s) {
-        return String(s)
+
+      function esc(value) {
+        return String(value)
           .replaceAll("&", "&amp;")
           .replaceAll("<", "&lt;")
           .replaceAll(">", "&gt;")
@@ -602,6 +673,112 @@
         `).join("");
       }
 
+      function flatten(value, path = "", out = []) {
+        if (Array.isArray(value)) {
+          if (!value.length) {
+            out.push({ path, type: "array", value: "[]" });
+          } else {
+            value.forEach((item, i) => flatten(item, `${path}[${i}]`, out));
+          }
+          return out;
+        }
+
+        if (value && typeof value === "object") {
+          const keys = Object.keys(value);
+          if (!keys.length) {
+            out.push({ path, type: "object", value: "{}" });
+          } else {
+            keys.forEach((k) => flatten(value[k], path ? `${path}.${k}` : k, out));
+          }
+          return out;
+        }
+
+        out.push({
+          path: path || "(root)",
+          type: value === null ? "null" : typeof value,
+          value: value === undefined ? "undefined" : String(value)
+        });
+
+        return out;
+      }
+
+      function syncKrakenStateToStorage() {
+        try {
+          const state = {
+            index: krakenIndex,
+            autoRotate: krakenAutoRotate,
+            totalPages: krakenPages.length,
+            updatedAt: Date.now()
+          };
+          localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify(state));
+        } catch (err) {
+          console.warn("State sync failed:", err);
+        }
+      }
+
+      function sendKrakenCommand(type, payload = {}) {
+        try {
+          const command = {
+            type,
+            ...payload,
+            ts: Date.now()
+          };
+          localStorage.setItem(STORAGE_CMD_KEY, JSON.stringify(command));
+        } catch (err) {
+          console.warn("Command send failed:", err);
+        }
+      }
+
+      function renderControllerState() {
+        if (!els.controllerState) return;
+
+        let state = null;
+        try {
+          state = JSON.parse(localStorage.getItem(STORAGE_STATE_KEY) || "null");
+        } catch {}
+
+        if (!state) {
+          els.controllerState.textContent = "Kraken state yok";
+          if (els.btnToggleAuto) els.btnToggleAuto.textContent = "Auto: ?";
+          return;
+        }
+
+        els.controllerState.textContent =
+          `page ${state.index + 1}/${state.totalPages || 0} • auto ${state.autoRotate ? "ON" : "OFF"}`;
+
+        if (els.btnToggleAuto) {
+          els.btnToggleAuto.textContent = `Auto: ${state.autoRotate ? "ON" : "OFF"}`;
+        }
+      }
+
+      function bindControllerButtons() {
+        if (els.btnPrev) {
+          els.btnPrev.addEventListener("click", () => sendKrakenCommand("prev"));
+        }
+
+        if (els.btnNext) {
+          els.btnNext.addEventListener("click", () => sendKrakenCommand("next"));
+        }
+
+        if (els.btnToggleAuto) {
+          els.btnToggleAuto.addEventListener("click", () => {
+            let state = { autoRotate: true };
+            try {
+              state = JSON.parse(localStorage.getItem(STORAGE_STATE_KEY) || '{"autoRotate":true}');
+            } catch {}
+            sendKrakenCommand("setAutoRotate", {
+              value: !state.autoRotate
+            });
+          });
+        }
+
+        if (els.btnPage0) {
+          els.btnPage0.addEventListener("click", () => {
+            sendKrakenCommand("setIndex", { index: 0 });
+          });
+        }
+      }
+
       function renderSummary(data) {
         const v1 = window.nzxt?.v1 || {};
         const cards = [
@@ -614,6 +791,7 @@
           ["Target FPS", v1.targetFps ?? "N/A"],
           ["RAM kullanım", data.ram ? `${fmtMiB(data.ram.inUse)} / ${fmtMiB(data.ram.totalSize)}` : "N/A"],
         ];
+
         els.summary.innerHTML = cards.map(([k, v]) => `
           <div class="card">
             <div class="k">${esc(k)}</div>
@@ -701,7 +879,7 @@
           (data.ram.modules || []).forEach((mod, i) => {
             parts.push(`
               <div class="item">
-                <h3>RAM Module ${i}</h3>
+                <h3>RAM Module ${i} (ram.modules[${i}])</h3>
                 <div class="kv">
                   ${pairRows({
                     "kind": mod.kind ?? "N/A",
@@ -732,26 +910,6 @@
         els.sensorCards.innerHTML = parts.join("");
       }
 
-      function flatten(value, path = "", out = []) {
-        if (Array.isArray(value)) {
-          if (!value.length) out.push({ path, type: "array", value: "[]" });
-          else value.forEach((item, i) => flatten(item, `${path}[${i}]`, out));
-          return out;
-        }
-        if (value && typeof value === "object") {
-          const keys = Object.keys(value);
-          if (!keys.length) out.push({ path, type: "object", value: "{}" });
-          else keys.forEach((k) => flatten(value[k], path ? `${path}.${k}` : k, out));
-          return out;
-        }
-        out.push({
-          path: path || "(root)",
-          type: value === null ? "null" : typeof value,
-          value: value === undefined ? "undefined" : String(value)
-        });
-        return out;
-      }
-
       function renderFlatTable(data) {
         const payload = {
           windowNzxtV1: {
@@ -762,8 +920,10 @@
           },
           monitoringData: data
         };
+
         const rows = flatten(payload);
         els.rowCount.textContent = rows.length;
+
         els.flatBody.innerHTML = rows.map((r) => `
           <tr>
             <td class="path">${esc(r.path)}</td>
@@ -787,13 +947,11 @@
 
       function buildKrakenPages(data) {
         const pages = [];
-
         const cpus = Array.isArray(data.cpus) ? data.cpus : [];
         const gpus = Array.isArray(data.gpus) ? data.gpus : [];
         const ram = data.ram || null;
         const kraken = data.kraken || null;
 
-        // overview
         pages.push({
           chip: "OVERVIEW",
           name: "Sistem Özeti",
@@ -807,7 +965,6 @@
           ]
         });
 
-        // CPU pages
         cpus.forEach((cpu, i) => {
           pages.push({
             chip: `CPU ${i}`,
@@ -823,7 +980,6 @@
           });
         });
 
-        // GPU pages
         gpus.forEach((gpu, i) => {
           pages.push({
             chip: `GPU ${i}`,
@@ -839,7 +995,6 @@
           });
         });
 
-        // RAM
         if (ram) {
           pages.push({
             chip: "RAM",
@@ -855,7 +1010,6 @@
           });
         }
 
-        // Kraken
         if (kraken) {
           pages.push({
             chip: "KRAKEN",
@@ -876,6 +1030,7 @@
 
       function renderKrakenPage() {
         if (!isKrakenView || !els.krakenPage) return;
+
         if (!krakenPages.length) {
           els.krakenPage.innerHTML = `
             <div class="page-card">
@@ -885,10 +1040,12 @@
           `;
           els.krakenPager.innerHTML = "";
           els.krakenMeta.textContent = "henüz veri yok";
+          syncKrakenStateToStorage();
           return;
         }
 
         const page = krakenPages[krakenIndex];
+
         els.krakenPage.innerHTML = `
           <div class="page-card">
             <div class="page-chip">${esc(page.chip)}</div>
@@ -913,20 +1070,78 @@
         ).join("");
 
         const now = new Date().toLocaleTimeString("tr-TR");
-        els.krakenMeta.textContent = `${krakenIndex + 1}/${krakenPages.length} • ${now}`;
-        els.krakenHeaderSub.textContent =
-          `${window.nzxt?.v1?.width ?? "?"}×${window.nzxt?.v1?.height ?? "?"} • ${window.nzxt?.v1?.shape ?? "?"}`;
+        els.krakenMeta.textContent =
+          `${krakenIndex + 1}/${krakenPages.length} • ${krakenAutoRotate ? "AUTO" : "MANUAL"} • ${now}`;
+
+        if (els.krakenHeaderSub) {
+          els.krakenHeaderSub.textContent =
+            `${window.nzxt?.v1?.width ?? "?"}×${window.nzxt?.v1?.height ?? "?"} • ${window.nzxt?.v1?.shape ?? "?"}`;
+        }
+
+        syncKrakenStateToStorage();
       }
 
-      function restartKrakenRotation() {
+      function startKrakenRotation() {
         if (!isKrakenView) return;
-        if (krakenTimer) clearInterval(krakenTimer);
-        renderKrakenPage();
+        if (krakenTimer) return;
+
         krakenTimer = setInterval(() => {
+          if (!krakenAutoRotate) return;
           if (!krakenPages.length) return;
+
           krakenIndex = (krakenIndex + 1) % krakenPages.length;
           renderKrakenPage();
-        }, 3500);
+        }, KRAKEN_ROTATE_MS);
+      }
+
+      function updateKrakenPages(data) {
+        const oldLength = krakenPages.length;
+        krakenPages = buildKrakenPages(data);
+
+        if (!krakenPages.length) {
+          krakenIndex = 0;
+        } else if (krakenIndex >= krakenPages.length) {
+          krakenIndex = 0;
+        } else if (oldLength === 0) {
+          krakenIndex = 0;
+        }
+
+        renderKrakenPage();
+      }
+
+      function applyKrakenCommand(command) {
+        if (!command || !command.type) return;
+
+        switch (command.type) {
+          case "next":
+            if (krakenPages.length) {
+              krakenIndex = (krakenIndex + 1) % krakenPages.length;
+              renderKrakenPage();
+            }
+            break;
+
+          case "prev":
+            if (krakenPages.length) {
+              krakenIndex = (krakenIndex - 1 + krakenPages.length) % krakenPages.length;
+              renderKrakenPage();
+            }
+            break;
+
+          case "setIndex":
+            if (krakenPages.length) {
+              const idx = Number(command.index);
+              if (!Number.isNaN(idx)) {
+                krakenIndex = Math.max(0, Math.min(idx, krakenPages.length - 1));
+                renderKrakenPage();
+              }
+            }
+            break;
+
+          case "setAutoRotate":
+            krakenAutoRotate = Boolean(command.value);
+            renderKrakenPage();
+            break;
+        }
       }
 
       function handleData(data) {
@@ -938,28 +1153,57 @@
           renderSensorCards(data);
           renderFlatTable(data);
           renderRawJson(data);
+          renderControllerState();
         } else {
-          krakenPages = buildKrakenPages(data);
-          if (krakenIndex >= krakenPages.length) krakenIndex = 0;
-          restartKrakenRotation();
+          updateKrakenPages(data);
+          startKrakenRotation();
         }
       }
+
+      window.addEventListener("storage", (event) => {
+        if (!event.key) return;
+
+        if (!isKrakenView && event.key === STORAGE_STATE_KEY) {
+          renderControllerState();
+        }
+
+        if (isKrakenView && event.key === STORAGE_CMD_KEY && event.newValue) {
+          try {
+            const command = JSON.parse(event.newValue);
+            applyKrakenCommand(command);
+          } catch (err) {
+            console.warn("Command parse failed:", err);
+          }
+        }
+      });
 
       window.nzxt = window.nzxt || {};
       window.nzxt.v1 = window.nzxt.v1 || {};
       window.nzxt.v1.onMonitoringDataUpdate = handleData;
 
-      // CAM dışında demo veri
+      if (!isKrakenView) {
+        bindControllerButtons();
+        renderControllerState();
+      }
+
+      // Demo/fallback data
       setTimeout(() => {
-        const hasRealWindow =
+        const hasRealWindowInfo =
           typeof window.nzxt?.v1?.width !== "undefined" ||
           typeof window.nzxt?.v1?.height !== "undefined";
 
         if (!latestData) {
-          if (isKrakenView && !hasRealWindow) {
+          if (isKrakenView && !hasRealWindowInfo) {
             window.nzxt.v1.width = 640;
             window.nzxt.v1.height = 640;
             window.nzxt.v1.shape = "circle";
+            window.nzxt.v1.targetFps = 30;
+          }
+
+          if (!isKrakenView && !hasRealWindowInfo) {
+            window.nzxt.v1.width = 1280;
+            window.nzxt.v1.height = 720;
+            window.nzxt.v1.shape = "rectangle";
             window.nzxt.v1.targetFps = 30;
           }
 
