@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
@@ -35,7 +35,6 @@
 
     .hidden { display: none !important; }
 
-    /* NORMAL MODE */
     .normal-wrap {
       max-width: 1280px;
       margin: 0 auto;
@@ -267,7 +266,7 @@
       flex-wrap: wrap;
     }
 
-    button {
+    button, select {
       appearance: none;
       border: 1px solid var(--line);
       background: var(--panel2);
@@ -275,6 +274,9 @@
       border-radius: 12px;
       padding: 10px 14px;
       font: inherit;
+    }
+
+    button {
       cursor: pointer;
       transition: 120ms ease;
     }
@@ -288,7 +290,18 @@
       transform: translateY(1px);
     }
 
-    /* KRAKEN MODE */
+    .toolbar-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .toolbar-label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
     body.kraken {
       padding: 0;
       overflow: hidden;
@@ -463,25 +476,37 @@
   </style>
 </head>
 <body>
-  <!-- NORMAL MODE -->
   <div id="normalApp" class="normal-wrap">
     <div class="title">
-      <h1>NZXT CAM Web Integration — Canlı API Görüntüleyici</h1>
-      <p>
-        Normal görünüm tüm verileri ayrıntılı gösterir. <b>?kraken=1</b> modunda ise yuvarlak
-        640x640 ekran için otomatik sadeleştirilmiş, sayfalı görünüm açılır. Ayrıca bu sayfadan
-        Kraken görünümünü uzaktan kontrol edebilirsin.
+      <h1 id="titleMain">NZXT CAM Web Integration — Live API Viewer</h1>
+      <p id="titleDesc">
+        The normal view shows all data in detail. In <b>?kraken=1</b> mode, a simplified paged UI optimized for a round 640×640 display is used. You can also control the Kraken view remotely from this page.
       </p>
     </div>
 
     <section class="panel" style="margin-bottom:12px;">
       <div class="panel-head">
-        <h2>Kraken Kontrol</h2>
-        <div class="status">
-          <span class="badge">Remote state: <span id="controllerState">-</span></span>
+        <h2 id="langPanelTitle">Language & Kraken Control</h2>
+        <div class="toolbar-row">
+          <span class="toolbar-label" id="langLabel">Language</span>
+          <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="tr">Türkçe</option>
+            <option value="de">Deutsch</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="pt">Português</option>
+            <option value="ru">Русский</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="zh">中文</option>
+          </select>
         </div>
       </div>
       <div class="panel-body">
+        <div class="status" style="margin-bottom:10px;">
+          <span class="badge"><span id="controllerStateLabel">Remote state:</span> <span id="controllerState">-</span></span>
+        </div>
         <div class="controller-buttons">
           <button id="btnPrev" type="button">◀ Prev</button>
           <button id="btnNext" type="button">Next ▶</button>
@@ -494,28 +519,27 @@
     <div class="grid">
       <section class="panel">
         <div class="panel-head">
-          <h2>Özet / Algılanan Sensörler</h2>
+          <h2 id="summaryPanelTitle">Summary / Detected Sensors</h2>
           <div class="status">
-            <span class="badge"><span id="liveDot" class="dot wait"></span><span id="liveText">CAM verisi bekleniyor...</span></span>
-            <span class="badge">Güncelleme: <span id="lastUpdate">-</span></span>
-            <span class="badge">Kraken görünümü: <span id="krakenMode">-</span></span>
+            <span class="badge"><span id="liveDot" class="dot wait"></span><span id="liveText">Waiting for CAM data...</span></span>
+            <span class="badge"><span id="lastUpdateLabel">Updated:</span> <span id="lastUpdate">-</span></span>
+            <span class="badge"><span id="krakenModeLabel">Kraken view:</span> <span id="krakenMode">-</span></span>
           </div>
         </div>
         <div class="panel-body">
           <div class="summary-grid" id="summary"></div>
           <div class="list" id="sensorCards"></div>
-          <div class="footer-note">
-            Normal tarayıcıda gerçek CAM verisi gelmeyebilir. Kraken görünümünü test etmek için URL sonuna
-            <span style="font-family:var(--mono)">?kraken=1</span> ekleyebilirsin.
+          <div class="footer-note" id="footerNote">
+            In a normal browser, real CAM data may not be available. To preview the Kraken layout, append <span style="font-family:var(--mono)">?kraken=1</span> to the URL.
           </div>
         </div>
       </section>
 
       <section class="panel">
         <div class="panel-head">
-          <h2>Tüm Alanlar — Flattened Liste</h2>
+          <h2 id="flatPanelTitle">All Fields — Flattened View</h2>
           <div class="status">
-            <span class="badge">Toplam satır: <span id="rowCount">0</span></span>
+            <span class="badge"><span id="rowCountLabel">Rows:</span> <span id="rowCount">0</span></span>
           </div>
         </div>
         <div class="panel-body">
@@ -523,9 +547,9 @@
             <table>
               <thead>
                 <tr>
-                  <th>Path</th>
-                  <th>Type</th>
-                  <th>Value</th>
+                  <th id="thPath">Path</th>
+                  <th id="thType">Type</th>
+                  <th id="thValue">Value</th>
                 </tr>
               </thead>
               <tbody id="flatBody"></tbody>
@@ -536,19 +560,18 @@
     </div>
 
     <section class="panel" style="margin-top:12px;">
-      <div class="panel-head"><h2>Ham JSON</h2></div>
+      <div class="panel-head"><h2 id="rawJsonTitle">Raw JSON</h2></div>
       <div class="panel-body">
-        <pre id="rawJson">Henüz veri yok.</pre>
+        <pre id="rawJson">No data yet.</pre>
       </div>
     </section>
   </div>
 
-  <!-- KRAKEN MODE -->
   <div id="krakenApp" class="kraken-stage hidden">
     <div class="kraken-circle">
       <div class="kraken-safe">
         <div class="kraken-header">
-          <div class="kraken-title">NZXT CAM</div>
+          <div id="krakenTitle" class="kraken-title">NZXT CAM</div>
           <div id="krakenHeaderSub" class="kraken-sub">640×640 circle</div>
         </div>
 
@@ -558,7 +581,7 @@
 
         <div class="kraken-footer">
           <div id="krakenPager" class="pager"></div>
-          <div id="krakenMeta" class="kraken-meta">veri bekleniyor...</div>
+          <div id="krakenMeta" class="kraken-meta">waiting for data...</div>
         </div>
       </div>
     </div>
@@ -576,29 +599,1047 @@
 
       const STORAGE_STATE_KEY = "nzxt.kraken.state";
       const STORAGE_CMD_KEY = "nzxt.kraken.command";
+      const STORAGE_LANG_KEY = "nzxt.ui.lang";
       const KRAKEN_ROTATE_MS = 3500;
 
-      const els = {
-        liveDot: document.getElementById("liveDot"),
-        liveText: document.getElementById("liveText"),
-        lastUpdate: document.getElementById("lastUpdate"),
-        krakenMode: document.getElementById("krakenMode"),
-        summary: document.getElementById("summary"),
-        sensorCards: document.getElementById("sensorCards"),
-        flatBody: document.getElementById("flatBody"),
-        rowCount: document.getElementById("rowCount"),
-        rawJson: document.getElementById("rawJson"),
+      const I18N = {
+        en: {
+          htmlLang: "en",
+          titleMain: "NZXT CAM Web Integration — Live API Viewer",
+          titleDesc: "The normal view shows all data in detail. In ?kraken=1 mode, a simplified paged UI optimized for a round 640×640 display is used. You can also control the Kraken view remotely from this page.",
+          langPanelTitle: "Language & Kraken Control",
+          langLabel: "Language",
+          controllerStateLabel: "Remote state:",
+          btnPrev: "◀ Prev",
+          btnNext: "Next ▶",
+          btnToggleAutoOn: "Auto: ON",
+          btnToggleAutoOff: "Auto: OFF",
+          btnPage0: "Go Overview",
+          summaryPanelTitle: "Summary / Detected Sensors",
+          waitingCam: "Waiting for CAM data...",
+          liveCam: "Receiving CAM data",
+          updatedLabel: "Updated:",
+          krakenModeLabel: "Kraken view:",
+          yes: "Yes",
+          no: "No",
+          footerNote: "In a normal browser, real CAM data may not be available. To preview the Kraken layout, append ?kraken=1 to the URL.",
+          flatPanelTitle: "All Fields — Flattened View",
+          rowsLabel: "Rows:",
+          thPath: "Path",
+          thType: "Type",
+          thValue: "Value",
+          rawJsonTitle: "Raw JSON",
+          noDataYet: "No data yet.",
+          krakenTitle: "NZXT CAM",
+          waitingData: "waiting for data...",
+          remoteStateMissing: "No Kraken state",
+          pageWord: "page",
+          autoWord: "auto",
+          on: "ON",
+          off: "OFF",
+          auto: "AUTO",
+          manual: "MANUAL",
+          overview: "Overview",
+          systemOverview: "System Overview",
+          memory: "Memory",
+          liquidTemp: "Liquid Temp",
+          detectedCpuCount: "CPU count",
+          detectedGpuCount: "GPU count",
+          ramModules: "RAM modules",
+          liquidTemperature: "Liquid temperature",
+          display: "Display",
+          shape: "Shape",
+          targetFps: "Target FPS",
+          ramUsage: "RAM usage",
+          manufacturer: "manufacturer",
+          codeName: "codeName",
+          socket: "socket",
+          load: "load",
+          temperature: "temperature",
+          minTemperature: "minTemperature",
+          maxTemperature: "maxTemperature",
+          frequency: "frequency",
+          minFrequency: "minFrequency",
+          maxFrequency: "maxFrequency",
+          stockFrequency: "stockFrequency",
+          fanSpeed: "fanSpeed",
+          minFanSpeed: "minFanSpeed",
+          maxFanSpeed: "maxFanSpeed",
+          numCores: "numCores",
+          numThreads: "numThreads",
+          tdp: "tdp",
+          power: "power",
+          totalSize: "totalSize",
+          inUse: "inUse",
+          moduleCount: "moduleCount",
+          kind: "kind",
+          size: "size",
+          model: "model",
+          unknown: "Unknown",
+          waitingChip: "WAITING",
+          waitingPageName: "Waiting for CAM data",
+          used: "USED",
+          total: "TOTAL",
+          modules: "MODULES",
+          type: "TYPE",
+          width: "WIDTH",
+          height: "HEIGHT",
+          gpuCount: "GPU COUNT",
+          ramShort: "RAM",
+          liquidShort: "LIQUID",
+          shapeShort: "SHAPE",
+          fpsShort: "FPS",
+          loadShort: "LOAD",
+          clockShort: "CLOCK",
+          powerShort: "POWER",
+          fanShort: "FAN",
+          remoteStateTemplate: (index, total, auto) => `page ${index}/${total} • auto ${auto}`,
+          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
+        },
 
+        tr: {
+          htmlLang: "tr",
+          titleMain: "NZXT CAM Web Integration — Canlı API Görüntüleyici",
+          titleDesc: "Normal görünüm tüm verileri ayrıntılı gösterir. ?kraken=1 modunda ise yuvarlak 640×640 ekran için optimize edilmiş sade, sayfalı arayüz kullanılır. Ayrıca bu sayfadan Kraken görünümünü uzaktan kontrol edebilirsin.",
+          langPanelTitle: "Dil ve Kraken Kontrolü",
+          langLabel: "Dil",
+          controllerStateLabel: "Uzak durum:",
+          btnPrev: "◀ Önceki",
+          btnNext: "Sonraki ▶",
+          btnToggleAutoOn: "Oto: AÇIK",
+          btnToggleAutoOff: "Oto: KAPALI",
+          btnPage0: "Özete Git",
+          summaryPanelTitle: "Özet / Algılanan Sensörler",
+          waitingCam: "CAM verisi bekleniyor...",
+          liveCam: "CAM verisi alınıyor",
+          updatedLabel: "Güncelleme:",
+          krakenModeLabel: "Kraken görünümü:",
+          yes: "Evet",
+          no: "Hayır",
+          footerNote: "Normal tarayıcıda gerçek CAM verisi gelmeyebilir. Kraken görünümünü önizlemek için URL sonuna ?kraken=1 ekleyebilirsin.",
+          flatPanelTitle: "Tüm Alanlar — Düzleştirilmiş Görünüm",
+          rowsLabel: "Satır:",
+          thPath: "Yol",
+          thType: "Tür",
+          thValue: "Değer",
+          rawJsonTitle: "Ham JSON",
+          noDataYet: "Henüz veri yok.",
+          krakenTitle: "NZXT CAM",
+          waitingData: "veri bekleniyor...",
+          remoteStateMissing: "Kraken durumu yok",
+          pageWord: "sayfa",
+          autoWord: "oto",
+          on: "AÇIK",
+          off: "KAPALI",
+          auto: "OTO",
+          manual: "MANUEL",
+          overview: "Özet",
+          systemOverview: "Sistem Özeti",
+          memory: "Bellek",
+          liquidTemp: "Sıvı Sıcaklığı",
+          detectedCpuCount: "CPU sayısı",
+          detectedGpuCount: "GPU sayısı",
+          ramModules: "RAM modülü",
+          liquidTemperature: "Sıvı sıcaklığı",
+          display: "Ekran",
+          shape: "Şekil",
+          targetFps: "Hedef FPS",
+          ramUsage: "RAM kullanım",
+          manufacturer: "üretici",
+          codeName: "kod adı",
+          socket: "soket",
+          load: "yük",
+          temperature: "sıcaklık",
+          minTemperature: "min sıcaklık",
+          maxTemperature: "max sıcaklık",
+          frequency: "frekans",
+          minFrequency: "min frekans",
+          maxFrequency: "max frekans",
+          stockFrequency: "stok frekans",
+          fanSpeed: "fan hızı",
+          minFanSpeed: "min fan hızı",
+          maxFanSpeed: "max fan hızı",
+          numCores: "çekirdek",
+          numThreads: "izlek",
+          tdp: "tdp",
+          power: "güç",
+          totalSize: "toplam boyut",
+          inUse: "kullanımda",
+          moduleCount: "modül sayısı",
+          kind: "tür",
+          size: "boyut",
+          model: "model",
+          unknown: "Bilinmiyor",
+          waitingChip: "BEKLENİYOR",
+          waitingPageName: "CAM verisi bekleniyor",
+          used: "KULLANILAN",
+          total: "TOPLAM",
+          modules: "MODÜL",
+          type: "TÜR",
+          width: "GENİŞLİK",
+          height: "YÜKSEKLİK",
+          gpuCount: "GPU SAYISI",
+          ramShort: "RAM",
+          liquidShort: "SIVI",
+          shapeShort: "ŞEKİL",
+          fpsShort: "FPS",
+          loadShort: "YÜK",
+          clockShort: "SAAT",
+          powerShort: "GÜÇ",
+          fanShort: "FAN",
+          remoteStateTemplate: (index, total, auto) => `sayfa ${index}/${total} • oto ${auto}`,
+          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
+        },
+
+        de: {
+          htmlLang: "de",
+          titleMain: "NZXT CAM Web Integration — Live-API-Viewer",
+          titleDesc: "Die normale Ansicht zeigt alle Daten im Detail. Im Modus ?kraken=1 wird eine vereinfachte Seitenansicht verwendet, die für ein rundes 640×640-Display optimiert ist. Du kannst die Kraken-Ansicht auch von dieser Seite aus fernsteuern.",
+          langPanelTitle: "Sprache & Kraken-Steuerung",
+          langLabel: "Sprache",
+          controllerStateLabel: "Remote-Status:",
+          btnPrev: "◀ Zurück",
+          btnNext: "Weiter ▶",
+          btnToggleAutoOn: "Auto: EIN",
+          btnToggleAutoOff: "Auto: AUS",
+          btnPage0: "Zur Übersicht",
+          summaryPanelTitle: "Zusammenfassung / Erkannte Sensoren",
+          waitingCam: "Warte auf CAM-Daten...",
+          liveCam: "CAM-Daten werden empfangen",
+          updatedLabel: "Aktualisiert:",
+          krakenModeLabel: "Kraken-Ansicht:",
+          yes: "Ja",
+          no: "Nein",
+          footerNote: "In einem normalen Browser sind echte CAM-Daten möglicherweise nicht verfügbar. Um das Kraken-Layout zu testen, hänge ?kraken=1 an die URL an.",
+          flatPanelTitle: "Alle Felder — Flattened View",
+          rowsLabel: "Zeilen:",
+          thPath: "Pfad",
+          thType: "Typ",
+          thValue: "Wert",
+          rawJsonTitle: "Rohes JSON",
+          noDataYet: "Noch keine Daten.",
+          krakenTitle: "NZXT CAM",
+          waitingData: "warte auf Daten...",
+          remoteStateMissing: "Kein Kraken-Status",
+          pageWord: "Seite",
+          autoWord: "auto",
+          on: "EIN",
+          off: "AUS",
+          auto: "AUTO",
+          manual: "MANUELL",
+          overview: "Übersicht",
+          systemOverview: "Systemübersicht",
+          memory: "Speicher",
+          liquidTemp: "Flüssigkeitstemp.",
+          detectedCpuCount: "CPU-Anzahl",
+          detectedGpuCount: "GPU-Anzahl",
+          ramModules: "RAM-Module",
+          liquidTemperature: "Flüssigkeitstemperatur",
+          display: "Anzeige",
+          shape: "Form",
+          targetFps: "Ziel-FPS",
+          ramUsage: "RAM-Nutzung",
+          manufacturer: "Hersteller",
+          codeName: "Codename",
+          socket: "Sockel",
+          load: "Last",
+          temperature: "Temperatur",
+          minTemperature: "Min-Temperatur",
+          maxTemperature: "Max-Temperatur",
+          frequency: "Frequenz",
+          minFrequency: "Min-Frequenz",
+          maxFrequency: "Max-Frequenz",
+          stockFrequency: "Standardfrequenz",
+          fanSpeed: "Lüfterdrehzahl",
+          minFanSpeed: "Min-Lüfterdrehzahl",
+          maxFanSpeed: "Max-Lüfterdrehzahl",
+          numCores: "Kerne",
+          numThreads: "Threads",
+          tdp: "TDP",
+          power: "Leistung",
+          totalSize: "Gesamtgröße",
+          inUse: "Belegt",
+          moduleCount: "Modulanzahl",
+          kind: "Art",
+          size: "Größe",
+          model: "Modell",
+          unknown: "Unbekannt",
+          waitingChip: "WARTEN",
+          waitingPageName: "Warte auf CAM-Daten",
+          used: "BELEGT",
+          total: "GESAMT",
+          modules: "MODULE",
+          type: "TYP",
+          width: "BREITE",
+          height: "HÖHE",
+          gpuCount: "GPU-ANZAHL",
+          ramShort: "RAM",
+          liquidShort: "LIQUID",
+          shapeShort: "FORM",
+          fpsShort: "FPS",
+          loadShort: "LAST",
+          clockShort: "TAKT",
+          powerShort: "POWER",
+          fanShort: "LÜFTER",
+          remoteStateTemplate: (index, total, auto) => `Seite ${index}/${total} • auto ${auto}`,
+          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
+        },
+
+        fr: {
+          htmlLang: "fr",
+          titleMain: "NZXT CAM Web Integration — Visualiseur API en direct",
+          titleDesc: "La vue normale affiche toutes les données en détail. En mode ?kraken=1, une interface paginée simplifiée optimisée pour un écran rond 640×640 est utilisée. Vous pouvez aussi contrôler la vue Kraken à distance depuis cette page.",
+          langPanelTitle: "Langue et contrôle Kraken",
+          langLabel: "Langue",
+          controllerStateLabel: "État distant :",
+          btnPrev: "◀ Précédent",
+          btnNext: "Suivant ▶",
+          btnToggleAutoOn: "Auto : ON",
+          btnToggleAutoOff: "Auto : OFF",
+          btnPage0: "Aller à l’aperçu",
+          summaryPanelTitle: "Résumé / Capteurs détectés",
+          waitingCam: "En attente des données CAM...",
+          liveCam: "Réception des données CAM",
+          updatedLabel: "Mis à jour :",
+          krakenModeLabel: "Vue Kraken :",
+          yes: "Oui",
+          no: "Non",
+          footerNote: "Dans un navigateur normal, les vraies données CAM peuvent ne pas être disponibles. Pour prévisualiser l’interface Kraken, ajoutez ?kraken=1 à l’URL.",
+          flatPanelTitle: "Tous les champs — Vue aplatie",
+          rowsLabel: "Lignes :",
+          thPath: "Chemin",
+          thType: "Type",
+          thValue: "Valeur",
+          rawJsonTitle: "JSON brut",
+          noDataYet: "Aucune donnée pour le moment.",
+          krakenTitle: "NZXT CAM",
+          waitingData: "en attente des données...",
+          remoteStateMissing: "Aucun état Kraken",
+          pageWord: "page",
+          autoWord: "auto",
+          on: "ON",
+          off: "OFF",
+          auto: "AUTO",
+          manual: "MANUEL",
+          overview: "Aperçu",
+          systemOverview: "Aperçu système",
+          memory: "Mémoire",
+          liquidTemp: "Temp. liquide",
+          detectedCpuCount: "Nombre de CPU",
+          detectedGpuCount: "Nombre de GPU",
+          ramModules: "Modules RAM",
+          liquidTemperature: "Température liquide",
+          display: "Affichage",
+          shape: "Forme",
+          targetFps: "FPS cible",
+          ramUsage: "Utilisation RAM",
+          manufacturer: "fabricant",
+          codeName: "nom de code",
+          socket: "socket",
+          load: "charge",
+          temperature: "température",
+          minTemperature: "température min",
+          maxTemperature: "température max",
+          frequency: "fréquence",
+          minFrequency: "fréquence min",
+          maxFrequency: "fréquence max",
+          stockFrequency: "fréquence d’origine",
+          fanSpeed: "vitesse ventilateur",
+          minFanSpeed: "vitesse min ventilateur",
+          maxFanSpeed: "vitesse max ventilateur",
+          numCores: "cœurs",
+          numThreads: "threads",
+          tdp: "tdp",
+          power: "puissance",
+          totalSize: "taille totale",
+          inUse: "utilisé",
+          moduleCount: "nombre de modules",
+          kind: "type",
+          size: "taille",
+          model: "modèle",
+          unknown: "Inconnu",
+          waitingChip: "ATTENTE",
+          waitingPageName: "En attente des données CAM",
+          used: "UTILISÉ",
+          total: "TOTAL",
+          modules: "MODULES",
+          type: "TYPE",
+          width: "LARGEUR",
+          height: "HAUTEUR",
+          gpuCount: "NOMBRE GPU",
+          ramShort: "RAM",
+          liquidShort: "LIQUIDE",
+          shapeShort: "FORME",
+          fpsShort: "FPS",
+          loadShort: "CHARGE",
+          clockShort: "HORL.",
+          powerShort: "PUISS.",
+          fanShort: "VENT.",
+          remoteStateTemplate: (index, total, auto) => `page ${index}/${total} • auto ${auto}`,
+          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
+        },
+
+        es: {
+          htmlLang: "es",
+          titleMain: "NZXT CAM Web Integration — Visor API en vivo",
+          titleDesc: "La vista normal muestra todos los datos en detalle. En modo ?kraken=1 se usa una interfaz paginada simplificada optimizada para una pantalla redonda de 640×640. También puedes controlar la vista Kraken de forma remota desde esta página.",
+          langPanelTitle: "Idioma y control de Kraken",
+          langLabel: "Idioma",
+          controllerStateLabel: "Estado remoto:",
+          btnPrev: "◀ Anterior",
+          btnNext: "Siguiente ▶",
+          btnToggleAutoOn: "Auto: ON",
+          btnToggleAutoOff: "Auto: OFF",
+          btnPage0: "Ir al resumen",
+          summaryPanelTitle: "Resumen / Sensores detectados",
+          waitingCam: "Esperando datos de CAM...",
+          liveCam: "Recibiendo datos de CAM",
+          updatedLabel: "Actualizado:",
+          krakenModeLabel: "Vista Kraken:",
+          yes: "Sí",
+          no: "No",
+          footerNote: "En un navegador normal, los datos reales de CAM pueden no estar disponibles. Para previsualizar el diseño Kraken, agrega ?kraken=1 a la URL.",
+          flatPanelTitle: "Todos los campos — Vista aplanada",
+          rowsLabel: "Filas:",
+          thPath: "Ruta",
+          thType: "Tipo",
+          thValue: "Valor",
+          rawJsonTitle: "JSON bruto",
+          noDataYet: "Aún no hay datos.",
+          krakenTitle: "NZXT CAM",
+          waitingData: "esperando datos...",
+          remoteStateMissing: "Sin estado Kraken",
+          pageWord: "página",
+          autoWord: "auto",
+          on: "ON",
+          off: "OFF",
+          auto: "AUTO",
+          manual: "MANUAL",
+          overview: "Resumen",
+          systemOverview: "Resumen del sistema",
+          memory: "Memoria",
+          liquidTemp: "Temp. líquida",
+          detectedCpuCount: "Cantidad de CPU",
+          detectedGpuCount: "Cantidad de GPU",
+          ramModules: "Módulos RAM",
+          liquidTemperature: "Temperatura del líquido",
+          display: "Pantalla",
+          shape: "Forma",
+          targetFps: "FPS objetivo",
+          ramUsage: "Uso de RAM",
+          manufacturer: "fabricante",
+          codeName: "nombre en clave",
+          socket: "socket",
+          load: "carga",
+          temperature: "temperatura",
+          minTemperature: "temp. mín",
+          maxTemperature: "temp. máx",
+          frequency: "frecuencia",
+          minFrequency: "frecuencia mín",
+          maxFrequency: "frecuencia máx",
+          stockFrequency: "frecuencia base",
+          fanSpeed: "velocidad del ventilador",
+          minFanSpeed: "velocidad mínima del ventilador",
+          maxFanSpeed: "velocidad máxima del ventilador",
+          numCores: "núcleos",
+          numThreads: "hilos",
+          tdp: "tdp",
+          power: "potencia",
+          totalSize: "tamaño total",
+          inUse: "en uso",
+          moduleCount: "cantidad de módulos",
+          kind: "tipo",
+          size: "tamaño",
+          model: "modelo",
+          unknown: "Desconocido",
+          waitingChip: "ESPERA",
+          waitingPageName: "Esperando datos de CAM",
+          used: "USADO",
+          total: "TOTAL",
+          modules: "MÓDULOS",
+          type: "TIPO",
+          width: "ANCHO",
+          height: "ALTO",
+          gpuCount: "CANT. GPU",
+          ramShort: "RAM",
+          liquidShort: "LÍQ.",
+          shapeShort: "FORMA",
+          fpsShort: "FPS",
+          loadShort: "CARGA",
+          clockShort: "RELOJ",
+          powerShort: "POT.",
+          fanShort: "VENT.",
+          remoteStateTemplate: (index, total, auto) => `página ${index}/${total} • auto ${auto}`,
+          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
+        },
+
+        pt: {
+          htmlLang: "pt",
+          titleMain: "NZXT CAM Web Integration — Visualizador de API ao vivo",
+          titleDesc: "A visualização normal mostra todos os dados em detalhes. No modo ?kraken=1, é usada uma interface paginada simplificada otimizada para um display redondo 640×640. Você também pode controlar a visualização Kraken remotamente desta página.",
+          langPanelTitle: "Idioma e controle do Kraken",
+          langLabel: "Idioma",
+          controllerStateLabel: "Estado remoto:",
+          btnPrev: "◀ Anterior",
+          btnNext: "Próximo ▶",
+          btnToggleAutoOn: "Auto: LIGADO",
+          btnToggleAutoOff: "Auto: DESLIGADO",
+          btnPage0: "Ir para visão geral",
+          summaryPanelTitle: "Resumo / Sensores detectados",
+          waitingCam: "Aguardando dados do CAM...",
+          liveCam: "Recebendo dados do CAM",
+          updatedLabel: "Atualizado:",
+          krakenModeLabel: "Visualização Kraken:",
+          yes: "Sim",
+          no: "Não",
+          footerNote: "Em um navegador normal, os dados reais do CAM podem não estar disponíveis. Para visualizar o layout Kraken, adicione ?kraken=1 à URL.",
+          flatPanelTitle: "Todos os campos — Visão achatada",
+          rowsLabel: "Linhas:",
+          thPath: "Caminho",
+          thType: "Tipo",
+          thValue: "Valor",
+          rawJsonTitle: "JSON bruto",
+          noDataYet: "Ainda sem dados.",
+          krakenTitle: "NZXT CAM",
+          waitingData: "aguardando dados...",
+          remoteStateMissing: "Sem estado Kraken",
+          pageWord: "página",
+          autoWord: "auto",
+          on: "LIGADO",
+          off: "DESLIGADO",
+          auto: "AUTO",
+          manual: "MANUAL",
+          overview: "Visão geral",
+          systemOverview: "Visão geral do sistema",
+          memory: "Memória",
+          liquidTemp: "Temp. líquida",
+          detectedCpuCount: "Qtd. de CPU",
+          detectedGpuCount: "Qtd. de GPU",
+          ramModules: "Módulos de RAM",
+          liquidTemperature: "Temperatura do líquido",
+          display: "Tela",
+          shape: "Forma",
+          targetFps: "FPS alvo",
+          ramUsage: "Uso de RAM",
+          manufacturer: "fabricante",
+          codeName: "codinome",
+          socket: "soquete",
+          load: "carga",
+          temperature: "temperatura",
+          minTemperature: "temp. mín",
+          maxTemperature: "temp. máx",
+          frequency: "frequência",
+          minFrequency: "freq. mín",
+          maxFrequency: "freq. máx",
+          stockFrequency: "freq. base",
+          fanSpeed: "velocidade da ventoinha",
+          minFanSpeed: "velocidade mínima da ventoinha",
+          maxFanSpeed: "velocidade máxima da ventoinha",
+          numCores: "núcleos",
+          numThreads: "threads",
+          tdp: "tdp",
+          power: "potência",
+          totalSize: "tamanho total",
+          inUse: "em uso",
+          moduleCount: "quantidade de módulos",
+          kind: "tipo",
+          size: "tamanho",
+          model: "modelo",
+          unknown: "Desconhecido",
+          waitingChip: "AGUARDE",
+          waitingPageName: "Aguardando dados do CAM",
+          used: "USADO",
+          total: "TOTAL",
+          modules: "MÓDULOS",
+          type: "TIPO",
+          width: "LARGURA",
+          height: "ALTURA",
+          gpuCount: "QTD. GPU",
+          ramShort: "RAM",
+          liquidShort: "LÍQ.",
+          shapeShort: "FORMA",
+          fpsShort: "FPS",
+          loadShort: "CARGA",
+          clockShort: "CLOCK",
+          powerShort: "POT.",
+          fanShort: "VENT.",
+          remoteStateTemplate: (index, total, auto) => `página ${index}/${total} • auto ${auto}`,
+          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
+        },
+
+        ru: {
+          htmlLang: "ru",
+          titleMain: "NZXT CAM Web Integration — Просмотр API в реальном времени",
+          titleDesc: "Обычный режим показывает все данные подробно. В режиме ?kraken=1 используется упрощённый постраничный интерфейс, оптимизированный для круглого дисплея 640×640. Вы также можете удалённо управлять видом Kraken с этой страницы.",
+          langPanelTitle: "Язык и управление Kraken",
+          langLabel: "Язык",
+          controllerStateLabel: "Удалённое состояние:",
+          btnPrev: "◀ Назад",
+          btnNext: "Вперёд ▶",
+          btnToggleAutoOn: "Авто: ВКЛ",
+          btnToggleAutoOff: "Авто: ВЫКЛ",
+          btnPage0: "К обзору",
+          summaryPanelTitle: "Сводка / Обнаруженные датчики",
+          waitingCam: "Ожидание данных CAM...",
+          liveCam: "Получение данных CAM",
+          updatedLabel: "Обновлено:",
+          krakenModeLabel: "Режим Kraken:",
+          yes: "Да",
+          no: "Нет",
+          footerNote: "В обычном браузере реальные данные CAM могут быть недоступны. Чтобы посмотреть интерфейс Kraken, добавьте ?kraken=1 к URL.",
+          flatPanelTitle: "Все поля — Плоский вид",
+          rowsLabel: "Строк:",
+          thPath: "Путь",
+          thType: "Тип",
+          thValue: "Значение",
+          rawJsonTitle: "Сырой JSON",
+          noDataYet: "Данных пока нет.",
+          krakenTitle: "NZXT CAM",
+          waitingData: "ожидание данных...",
+          remoteStateMissing: "Нет состояния Kraken",
+          pageWord: "стр.",
+          autoWord: "авто",
+          on: "ВКЛ",
+          off: "ВЫКЛ",
+          auto: "АВТО",
+          manual: "РУЧНОЙ",
+          overview: "Обзор",
+          systemOverview: "Обзор системы",
+          memory: "Память",
+          liquidTemp: "Темп. жидкости",
+          detectedCpuCount: "Кол-во CPU",
+          detectedGpuCount: "Кол-во GPU",
+          ramModules: "Модули RAM",
+          liquidTemperature: "Температура жидкости",
+          display: "Дисплей",
+          shape: "Форма",
+          targetFps: "Целевой FPS",
+          ramUsage: "Использование RAM",
+          manufacturer: "производитель",
+          codeName: "кодовое имя",
+          socket: "сокет",
+          load: "нагрузка",
+          temperature: "температура",
+          minTemperature: "мин. температура",
+          maxTemperature: "макс. температура",
+          frequency: "частота",
+          minFrequency: "мин. частота",
+          maxFrequency: "макс. частота",
+          stockFrequency: "базовая частота",
+          fanSpeed: "скорость вентилятора",
+          minFanSpeed: "мин. скорость вентилятора",
+          maxFanSpeed: "макс. скорость вентилятора",
+          numCores: "ядер",
+          numThreads: "потоков",
+          tdp: "tdp",
+          power: "мощность",
+          totalSize: "общий объём",
+          inUse: "используется",
+          moduleCount: "число модулей",
+          kind: "тип",
+          size: "размер",
+          model: "модель",
+          unknown: "Неизвестно",
+          waitingChip: "ОЖИДАНИЕ",
+          waitingPageName: "Ожидание данных CAM",
+          used: "ИСПОЛ.",
+          total: "ВСЕГО",
+          modules: "МОДУЛИ",
+          type: "ТИП",
+          width: "ШИРИНА",
+          height: "ВЫСОТА",
+          gpuCount: "КОЛ-ВО GPU",
+          ramShort: "RAM",
+          liquidShort: "ЖИДК.",
+          shapeShort: "ФОРМА",
+          fpsShort: "FPS",
+          loadShort: "НАГР.",
+          clockShort: "ЧАСТ.",
+          powerShort: "МОЩН.",
+          fanShort: "ВЕНТ.",
+          remoteStateTemplate: (index, total, auto) => `стр. ${index}/${total} • авто ${auto}`,
+          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
+        },
+
+        ja: {
+          htmlLang: "ja",
+          titleMain: "NZXT CAM Web Integration — ライブAPIビューア",
+          titleDesc: "通常ビューではすべてのデータを詳細表示します。?kraken=1 モードでは、円形 640×640 ディスプレイ向けに最適化されたシンプルなページUIを使用します。このページから Kraken ビューをリモート操作することもできます。",
+          langPanelTitle: "言語とKrakenコントロール",
+          langLabel: "言語",
+          controllerStateLabel: "リモート状態:",
+          btnPrev: "◀ 前へ",
+          btnNext: "次へ ▶",
+          btnToggleAutoOn: "自動: ON",
+          btnToggleAutoOff: "自動: OFF",
+          btnPage0: "概要へ",
+          summaryPanelTitle: "概要 / 検出されたセンサー",
+          waitingCam: "CAMデータを待機中...",
+          liveCam: "CAMデータ受信中",
+          updatedLabel: "更新:",
+          krakenModeLabel: "Kraken表示:",
+          yes: "はい",
+          no: "いいえ",
+          footerNote: "通常のブラウザでは実際の CAM データが利用できない場合があります。Kraken レイアウトを確認するには URL に ?kraken=1 を追加してください。",
+          flatPanelTitle: "全フィールド — フラット表示",
+          rowsLabel: "行数:",
+          thPath: "パス",
+          thType: "型",
+          thValue: "値",
+          rawJsonTitle: "生JSON",
+          noDataYet: "まだデータがありません。",
+          krakenTitle: "NZXT CAM",
+          waitingData: "データ待機中...",
+          remoteStateMissing: "Kraken状態なし",
+          pageWord: "ページ",
+          autoWord: "自動",
+          on: "ON",
+          off: "OFF",
+          auto: "AUTO",
+          manual: "MANUAL",
+          overview: "概要",
+          systemOverview: "システム概要",
+          memory: "メモリ",
+          liquidTemp: "液温",
+          detectedCpuCount: "CPU数",
+          detectedGpuCount: "GPU数",
+          ramModules: "RAMモジュール",
+          liquidTemperature: "液温",
+          display: "表示",
+          shape: "形状",
+          targetFps: "目標FPS",
+          ramUsage: "RAM使用量",
+          manufacturer: "メーカー",
+          codeName: "コード名",
+          socket: "ソケット",
+          load: "負荷",
+          temperature: "温度",
+          minTemperature: "最低温度",
+          maxTemperature: "最高温度",
+          frequency: "周波数",
+          minFrequency: "最低周波数",
+          maxFrequency: "最高周波数",
+          stockFrequency: "定格周波数",
+          fanSpeed: "ファン速度",
+          minFanSpeed: "最低ファン速度",
+          maxFanSpeed: "最高ファン速度",
+          numCores: "コア数",
+          numThreads: "スレッド数",
+          tdp: "tdp",
+          power: "電力",
+          totalSize: "総容量",
+          inUse: "使用中",
+          moduleCount: "モジュール数",
+          kind: "種類",
+          size: "サイズ",
+          model: "モデル",
+          unknown: "不明",
+          waitingChip: "待機中",
+          waitingPageName: "CAMデータを待機中",
+          used: "使用中",
+          total: "合計",
+          modules: "モジュール",
+          type: "タイプ",
+          width: "幅",
+          height: "高さ",
+          gpuCount: "GPU数",
+          ramShort: "RAM",
+          liquidShort: "液温",
+          shapeShort: "形状",
+          fpsShort: "FPS",
+          loadShort: "負荷",
+          clockShort: "クロック",
+          powerShort: "電力",
+          fanShort: "ファン",
+          remoteStateTemplate: (index, total, auto) => `${index}/${total} ${pageWordFix("ページ")} • 自動 ${auto}`,
+          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
+        },
+
+        ko: {
+          htmlLang: "ko",
+          titleMain: "NZXT CAM Web Integration — 실시간 API 뷰어",
+          titleDesc: "일반 보기에서는 모든 데이터를 자세히 표시합니다. ?kraken=1 모드에서는 원형 640×640 디스플레이에 최적화된 단순한 페이지 UI가 사용됩니다. 이 페이지에서 Kraken 보기를 원격 제어할 수도 있습니다.",
+          langPanelTitle: "언어 및 Kraken 제어",
+          langLabel: "언어",
+          controllerStateLabel: "원격 상태:",
+          btnPrev: "◀ 이전",
+          btnNext: "다음 ▶",
+          btnToggleAutoOn: "자동: ON",
+          btnToggleAutoOff: "자동: OFF",
+          btnPage0: "개요로 이동",
+          summaryPanelTitle: "요약 / 감지된 센서",
+          waitingCam: "CAM 데이터를 기다리는 중...",
+          liveCam: "CAM 데이터 수신 중",
+          updatedLabel: "업데이트:",
+          krakenModeLabel: "Kraken 보기:",
+          yes: "예",
+          no: "아니오",
+          footerNote: "일반 브라우저에서는 실제 CAM 데이터가 제공되지 않을 수 있습니다. Kraken 레이아웃을 미리 보려면 URL 끝에 ?kraken=1 을 추가하세요.",
+          flatPanelTitle: "모든 필드 — 평면 보기",
+          rowsLabel: "행:",
+          thPath: "경로",
+          thType: "유형",
+          thValue: "값",
+          rawJsonTitle: "원본 JSON",
+          noDataYet: "아직 데이터가 없습니다.",
+          krakenTitle: "NZXT CAM",
+          waitingData: "데이터 대기 중...",
+          remoteStateMissing: "Kraken 상태 없음",
+          pageWord: "페이지",
+          autoWord: "자동",
+          on: "ON",
+          off: "OFF",
+          auto: "AUTO",
+          manual: "MANUAL",
+          overview: "개요",
+          systemOverview: "시스템 개요",
+          memory: "메모리",
+          liquidTemp: "액체 온도",
+          detectedCpuCount: "CPU 개수",
+          detectedGpuCount: "GPU 개수",
+          ramModules: "RAM 모듈",
+          liquidTemperature: "액체 온도",
+          display: "디스플레이",
+          shape: "형태",
+          targetFps: "목표 FPS",
+          ramUsage: "RAM 사용량",
+          manufacturer: "제조사",
+          codeName: "코드명",
+          socket: "소켓",
+          load: "부하",
+          temperature: "온도",
+          minTemperature: "최저 온도",
+          maxTemperature: "최고 온도",
+          frequency: "주파수",
+          minFrequency: "최저 주파수",
+          maxFrequency: "최고 주파수",
+          stockFrequency: "기본 주파수",
+          fanSpeed: "팬 속도",
+          minFanSpeed: "최저 팬 속도",
+          maxFanSpeed: "최고 팬 속도",
+          numCores: "코어 수",
+          numThreads: "스레드 수",
+          tdp: "tdp",
+          power: "전력",
+          totalSize: "총 용량",
+          inUse: "사용 중",
+          moduleCount: "모듈 수",
+          kind: "종류",
+          size: "크기",
+          model: "모델",
+          unknown: "알 수 없음",
+          waitingChip: "대기",
+          waitingPageName: "CAM 데이터 대기 중",
+          used: "사용량",
+          total: "전체",
+          modules: "모듈",
+          type: "유형",
+          width: "너비",
+          height: "높이",
+          gpuCount: "GPU 수",
+          ramShort: "RAM",
+          liquidShort: "액체",
+          shapeShort: "형태",
+          fpsShort: "FPS",
+          loadShort: "부하",
+          clockShort: "클럭",
+          powerShort: "전력",
+          fanShort: "팬",
+          remoteStateTemplate: (index, total, auto) => `${index}/${total} 페이지 • 자동 ${auto}`,
+          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
+        },
+
+        zh: {
+          htmlLang: "zh-CN",
+          titleMain: "NZXT CAM Web Integration — 实时 API 查看器",
+          titleDesc: "普通视图会详细显示所有数据。在 ?kraken=1 模式下，将使用针对圆形 640×640 显示屏优化的简化分页界面。你也可以从本页面远程控制 Kraken 视图。",
+          langPanelTitle: "语言与 Kraken 控制",
+          langLabel: "语言",
+          controllerStateLabel: "远程状态：",
+          btnPrev: "◀ 上一页",
+          btnNext: "下一页 ▶",
+          btnToggleAutoOn: "自动：开",
+          btnToggleAutoOff: "自动：关",
+          btnPage0: "转到概览",
+          summaryPanelTitle: "摘要 / 已检测传感器",
+          waitingCam: "等待 CAM 数据...",
+          liveCam: "正在接收 CAM 数据",
+          updatedLabel: "更新时间：",
+          krakenModeLabel: "Kraken 视图：",
+          yes: "是",
+          no: "否",
+          footerNote: "在普通浏览器中，真实 CAM 数据可能不可用。如需预览 Kraken 布局，请在 URL 后加上 ?kraken=1。",
+          flatPanelTitle: "所有字段 — 扁平视图",
+          rowsLabel: "行数：",
+          thPath: "路径",
+          thType: "类型",
+          thValue: "值",
+          rawJsonTitle: "原始 JSON",
+          noDataYet: "暂无数据。",
+          krakenTitle: "NZXT CAM",
+          waitingData: "等待数据中...",
+          remoteStateMissing: "没有 Kraken 状态",
+          pageWord: "页",
+          autoWord: "自动",
+          on: "开",
+          off: "关",
+          auto: "自动",
+          manual: "手动",
+          overview: "概览",
+          systemOverview: "系统概览",
+          memory: "内存",
+          liquidTemp: "液体温度",
+          detectedCpuCount: "CPU 数量",
+          detectedGpuCount: "GPU 数量",
+          ramModules: "RAM 模块",
+          liquidTemperature: "液体温度",
+          display: "显示",
+          shape: "形状",
+          targetFps: "目标 FPS",
+          ramUsage: "RAM 使用量",
+          manufacturer: "制造商",
+          codeName: "代号",
+          socket: "插槽",
+          load: "负载",
+          temperature: "温度",
+          minTemperature: "最低温度",
+          maxTemperature: "最高温度",
+          frequency: "频率",
+          minFrequency: "最低频率",
+          maxFrequency: "最高频率",
+          stockFrequency: "默认频率",
+          fanSpeed: "风扇转速",
+          minFanSpeed: "最低风扇转速",
+          maxFanSpeed: "最高风扇转速",
+          numCores: "核心数",
+          numThreads: "线程数",
+          tdp: "tdp",
+          power: "功耗",
+          totalSize: "总容量",
+          inUse: "已使用",
+          moduleCount: "模块数",
+          kind: "类型",
+          size: "大小",
+          model: "型号",
+          unknown: "未知",
+          waitingChip: "等待中",
+          waitingPageName: "等待 CAM 数据",
+          used: "已用",
+          total: "总计",
+          modules: "模块",
+          type: "类型",
+          width: "宽度",
+          height: "高度",
+          gpuCount: "GPU 数量",
+          ramShort: "RAM",
+          liquidShort: "液温",
+          shapeShort: "形状",
+          fpsShort: "FPS",
+          loadShort: "负载",
+          clockShort: "频率",
+          powerShort: "功耗",
+          fanShort: "风扇",
+          remoteStateTemplate: (index, total, auto) => `第 ${index}/${total} 页 • 自动 ${auto}`,
+          krakenMetaTemplate: (index, total, mode, time) => `${index}/${total} • ${mode} • ${time}`,
+        }
+      };
+
+      function pageWordFix(v) { return v; }
+
+      function getQueryLang() {
+        const raw = new URLSearchParams(location.search).get("lang");
+        if (!raw) return null;
+        const lang = raw.toLowerCase();
+        if (I18N[lang]) return lang;
+        if (lang.startsWith("tr")) return "tr";
+        if (lang.startsWith("de")) return "de";
+        if (lang.startsWith("fr")) return "fr";
+        if (lang.startsWith("es")) return "es";
+        if (lang.startsWith("pt")) return "pt";
+        if (lang.startsWith("ru")) return "ru";
+        if (lang.startsWith("ja")) return "ja";
+        if (lang.startsWith("ko")) return "ko";
+        if (lang.startsWith("zh")) return "zh";
+        if (lang.startsWith("en")) return "en";
+        return null;
+      }
+
+      function getBrowserLang() {
+        const lang = (navigator.language || "en").toLowerCase();
+        if (lang.startsWith("tr")) return "tr";
+        if (lang.startsWith("de")) return "de";
+        if (lang.startsWith("fr")) return "fr";
+        if (lang.startsWith("es")) return "es";
+        if (lang.startsWith("pt")) return "pt";
+        if (lang.startsWith("ru")) return "ru";
+        if (lang.startsWith("ja")) return "ja";
+        if (lang.startsWith("ko")) return "ko";
+        if (lang.startsWith("zh")) return "zh";
+        return "en";
+      }
+
+      let currentLang =
+        getQueryLang() ||
+        localStorage.getItem(STORAGE_LANG_KEY) ||
+        "en";
+
+      if (!I18N[currentLang]) currentLang = getBrowserLang();
+      if (!I18N[currentLang]) currentLang = "en";
+
+      function t(key) {
+        return I18N[currentLang]?.[key] ?? I18N.en[key] ?? key;
+      }
+
+      function setLanguage(lang) {
+        if (!I18N[lang]) lang = "en";
+        currentLang = lang;
+        try {
+          localStorage.setItem(STORAGE_LANG_KEY, lang);
+        } catch {}
+        applyStaticTexts();
+        rerenderAll();
+      }
+
+      const els = {
+        titleMain: document.getElementById("titleMain"),
+        titleDesc: document.getElementById("titleDesc"),
+        langPanelTitle: document.getElementById("langPanelTitle"),
+        langLabel: document.getElementById("langLabel"),
+        languageSelect: document.getElementById("languageSelect"),
+        controllerStateLabel: document.getElementById("controllerStateLabel"),
         controllerState: document.getElementById("controllerState"),
         btnPrev: document.getElementById("btnPrev"),
         btnNext: document.getElementById("btnNext"),
         btnToggleAuto: document.getElementById("btnToggleAuto"),
         btnPage0: document.getElementById("btnPage0"),
 
+        summaryPanelTitle: document.getElementById("summaryPanelTitle"),
+        liveDot: document.getElementById("liveDot"),
+        liveText: document.getElementById("liveText"),
+        lastUpdateLabel: document.getElementById("lastUpdateLabel"),
+        lastUpdate: document.getElementById("lastUpdate"),
+        krakenModeLabel: document.getElementById("krakenModeLabel"),
+        krakenMode: document.getElementById("krakenMode"),
+        summary: document.getElementById("summary"),
+        sensorCards: document.getElementById("sensorCards"),
+        footerNote: document.getElementById("footerNote"),
+
+        flatPanelTitle: document.getElementById("flatPanelTitle"),
+        rowCountLabel: document.getElementById("rowCountLabel"),
+        rowCount: document.getElementById("rowCount"),
+        thPath: document.getElementById("thPath"),
+        thType: document.getElementById("thType"),
+        thValue: document.getElementById("thValue"),
+        flatBody: document.getElementById("flatBody"),
+
+        rawJsonTitle: document.getElementById("rawJsonTitle"),
+        rawJson: document.getElementById("rawJson"),
+
+        krakenTitle: document.getElementById("krakenTitle"),
+        krakenHeaderSub: document.getElementById("krakenHeaderSub"),
         krakenPage: document.getElementById("krakenPage"),
         krakenPager: document.getElementById("krakenPager"),
         krakenMeta: document.getElementById("krakenMeta"),
-        krakenHeaderSub: document.getElementById("krakenHeaderSub"),
       };
 
       let latestData = null;
@@ -656,16 +1697,6 @@
           .replaceAll("'", "&#39;");
       }
 
-      function markLive() {
-        if (els.liveDot) {
-          els.liveDot.classList.remove("wait");
-          els.liveDot.classList.add("live");
-        }
-        if (els.liveText) els.liveText.textContent = "CAM verisi alınıyor";
-        if (els.lastUpdate) els.lastUpdate.textContent = new Date().toLocaleTimeString("tr-TR");
-        if (els.krakenMode) els.krakenMode.textContent = isKrakenView ? "Evet (?kraken=1)" : "Hayır";
-      }
-
       function pairRows(obj) {
         return Object.entries(obj).map(([k, v]) => `
           <div>${esc(k)}</div>
@@ -702,13 +1733,53 @@
         return out;
       }
 
+      function applyStaticTexts() {
+        document.documentElement.lang = I18N[currentLang]?.htmlLang || "en";
+
+        if (els.titleMain) els.titleMain.textContent = t("titleMain");
+        if (els.titleDesc) els.titleDesc.textContent = t("titleDesc");
+        if (els.langPanelTitle) els.langPanelTitle.textContent = t("langPanelTitle");
+        if (els.langLabel) els.langLabel.textContent = t("langLabel");
+        if (els.controllerStateLabel) els.controllerStateLabel.textContent = t("controllerStateLabel");
+        if (els.btnPrev) els.btnPrev.textContent = t("btnPrev");
+        if (els.btnNext) els.btnNext.textContent = t("btnNext");
+        if (els.btnPage0) els.btnPage0.textContent = t("btnPage0");
+        if (els.summaryPanelTitle) els.summaryPanelTitle.textContent = t("summaryPanelTitle");
+        if (els.lastUpdateLabel) els.lastUpdateLabel.textContent = t("updatedLabel");
+        if (els.krakenModeLabel) els.krakenModeLabel.textContent = t("krakenModeLabel");
+        if (els.footerNote) els.footerNote.textContent = t("footerNote");
+        if (els.flatPanelTitle) els.flatPanelTitle.textContent = t("flatPanelTitle");
+        if (els.rowCountLabel) els.rowCountLabel.textContent = t("rowsLabel");
+        if (els.thPath) els.thPath.textContent = t("thPath");
+        if (els.thType) els.thType.textContent = t("thType");
+        if (els.thValue) els.thValue.textContent = t("thValue");
+        if (els.rawJsonTitle) els.rawJsonTitle.textContent = t("rawJsonTitle");
+        if (els.krakenTitle) els.krakenTitle.textContent = t("krakenTitle");
+        if (els.languageSelect) els.languageSelect.value = currentLang;
+
+        if (!latestData) {
+          if (els.liveText) els.liveText.textContent = t("waitingCam");
+          if (els.rawJson) els.rawJson.textContent = t("noDataYet");
+          if (els.krakenMeta) els.krakenMeta.textContent = t("waitingData");
+        }
+
+        renderControllerState();
+        updateAutoButtonText();
+      }
+
+      function updateAutoButtonText() {
+        if (!els.btnToggleAuto) return;
+        els.btnToggleAuto.textContent = krakenAutoRotate ? t("btnToggleAutoOn") : t("btnToggleAutoOff");
+      }
+
       function syncKrakenStateToStorage() {
         try {
           const state = {
             index: krakenIndex,
             autoRotate: krakenAutoRotate,
             totalPages: krakenPages.length,
-            updatedAt: Date.now()
+            updatedAt: Date.now(),
+            lang: currentLang
           };
           localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify(state));
         } catch (err) {
@@ -738,17 +1809,17 @@
         } catch {}
 
         if (!state) {
-          els.controllerState.textContent = "Kraken state yok";
-          if (els.btnToggleAuto) els.btnToggleAuto.textContent = "Auto: ?";
+          els.controllerState.textContent = t("remoteStateMissing");
           return;
         }
 
-        els.controllerState.textContent =
-          `page ${state.index + 1}/${state.totalPages || 0} • auto ${state.autoRotate ? "ON" : "OFF"}`;
+        const autoText = state.autoRotate ? t("on") : t("off");
+        els.controllerState.textContent = I18N[currentLang].remoteStateTemplate(state.index + 1, state.totalPages || 0, autoText);
 
-        if (els.btnToggleAuto) {
-          els.btnToggleAuto.textContent = `Auto: ${state.autoRotate ? "ON" : "OFF"}`;
+        if (typeof state.autoRotate === "boolean") {
+          krakenAutoRotate = state.autoRotate;
         }
+        updateAutoButtonText();
       }
 
       function bindControllerButtons() {
@@ -777,19 +1848,37 @@
             sendKrakenCommand("setIndex", { index: 0 });
           });
         }
+
+        if (els.languageSelect) {
+          els.languageSelect.addEventListener("change", (e) => {
+            const lang = e.target.value;
+            setLanguage(lang);
+            sendKrakenCommand("setLanguage", { lang });
+          });
+        }
+      }
+
+      function markLive() {
+        if (els.liveDot) {
+          els.liveDot.classList.remove("wait");
+          els.liveDot.classList.add("live");
+        }
+        if (els.liveText) els.liveText.textContent = t("liveCam");
+        if (els.lastUpdate) els.lastUpdate.textContent = new Date().toLocaleTimeString(I18N[currentLang]?.htmlLang || "en");
+        if (els.krakenMode) els.krakenMode.textContent = isKrakenView ? `${t("yes")} (?kraken=1)` : t("no");
       }
 
       function renderSummary(data) {
         const v1 = window.nzxt?.v1 || {};
         const cards = [
-          ["CPU sayısı", Array.isArray(data.cpus) ? data.cpus.length : 0],
-          ["GPU sayısı", Array.isArray(data.gpus) ? data.gpus.length : 0],
-          ["RAM modülü", Array.isArray(data.ram?.modules) ? data.ram.modules.length : 0],
-          ["Sıvı sıcaklığı", fmtTemp(data.kraken?.liquidTemperature)],
-          ["Ekran", `${v1.width ?? "?"} × ${v1.height ?? "?"}`],
-          ["Shape", v1.shape ?? "N/A"],
-          ["Target FPS", v1.targetFps ?? "N/A"],
-          ["RAM kullanım", data.ram ? `${fmtMiB(data.ram.inUse)} / ${fmtMiB(data.ram.totalSize)}` : "N/A"],
+          [t("detectedCpuCount"), Array.isArray(data.cpus) ? data.cpus.length : 0],
+          [t("detectedGpuCount"), Array.isArray(data.gpus) ? data.gpus.length : 0],
+          [t("ramModules"), Array.isArray(data.ram?.modules) ? data.ram.modules.length : 0],
+          [t("liquidTemperature"), fmtTemp(data.kraken?.liquidTemperature)],
+          [t("display"), `${v1.width ?? "?"} × ${v1.height ?? "?"}`],
+          [t("shape"), v1.shape ?? "N/A"],
+          [t("targetFps"), v1.targetFps ?? "N/A"],
+          [t("ramUsage"), data.ram ? `${fmtMiB(data.ram.inUse)} / ${fmtMiB(data.ram.totalSize)}` : "N/A"],
         ];
 
         els.summary.innerHTML = cards.map(([k, v]) => `
@@ -807,27 +1896,27 @@
           data.cpus.forEach((cpu, i) => {
             parts.push(`
               <div class="item">
-                <h3>CPU ${i} — ${esc(cpu.name || "Bilinmiyor")}</h3>
+                <h3>CPU ${i} — ${esc(cpu.name || t("unknown"))}</h3>
                 <div class="kv">
                   ${pairRows({
-                    "manufacturer": cpu.manufacturer ?? "N/A",
-                    "codeName": cpu.codeName ?? "N/A",
-                    "socket": cpu.socket ?? "N/A",
-                    "load": fmtPct1(cpu.load),
-                    "temperature": fmtTemp(cpu.temperature),
-                    "minTemperature": fmtTemp(cpu.minTemperature),
-                    "maxTemperature": fmtTemp(cpu.maxTemperature),
-                    "frequency": fmtMHz(cpu.frequency),
-                    "minFrequency": fmtMHz(cpu.minFrequency),
-                    "maxFrequency": fmtMHz(cpu.maxFrequency),
-                    "stockFrequency": fmtMHz(cpu.stockFrequency),
-                    "fanSpeed": fmtRPM(cpu.fanSpeed),
-                    "minFanSpeed": fmtRPM(cpu.minFanSpeed),
-                    "maxFanSpeed": fmtRPM(cpu.maxFanSpeed),
-                    "numCores": cpu.numCores ?? "N/A",
-                    "numThreads": cpu.numThreads ?? "N/A",
-                    "tdp": fmtW(cpu.tdp),
-                    "power": fmtW(cpu.power),
+                    [t("manufacturer")]: cpu.manufacturer ?? "N/A",
+                    [t("codeName")]: cpu.codeName ?? "N/A",
+                    [t("socket")]: cpu.socket ?? "N/A",
+                    [t("load")]: fmtPct1(cpu.load),
+                    [t("temperature")]: fmtTemp(cpu.temperature),
+                    [t("minTemperature")]: fmtTemp(cpu.minTemperature),
+                    [t("maxTemperature")]: fmtTemp(cpu.maxTemperature),
+                    [t("frequency")]: fmtMHz(cpu.frequency),
+                    [t("minFrequency")]: fmtMHz(cpu.minFrequency),
+                    [t("maxFrequency")]: fmtMHz(cpu.maxFrequency),
+                    [t("stockFrequency")]: fmtMHz(cpu.stockFrequency),
+                    [t("fanSpeed")]: fmtRPM(cpu.fanSpeed),
+                    [t("minFanSpeed")]: fmtRPM(cpu.minFanSpeed),
+                    [t("maxFanSpeed")]: fmtRPM(cpu.maxFanSpeed),
+                    [t("numCores")]: cpu.numCores ?? "N/A",
+                    [t("numThreads")]: cpu.numThreads ?? "N/A",
+                    [t("tdp")]: fmtW(cpu.tdp),
+                    [t("power")]: fmtW(cpu.power),
                   })}
                 </div>
               </div>
@@ -839,22 +1928,22 @@
           data.gpus.forEach((gpu, i) => {
             parts.push(`
               <div class="item">
-                <h3>GPU ${i} (gpus[${i}]) — ${esc(gpu.name || "Bilinmiyor")}</h3>
+                <h3>GPU ${i} (gpus[${i}]) — ${esc(gpu.name || t("unknown"))}</h3>
                 <div class="kv">
                   ${pairRows({
-                    "name": gpu.name ?? "N/A",
-                    "load": fmtPct1(gpu.load),
-                    "temperature": fmtTemp(gpu.temperature),
-                    "minTemperature": fmtTemp(gpu.minTemperature),
-                    "maxTemperature": fmtTemp(gpu.maxTemperature),
-                    "frequency": fmtMHz(gpu.frequency),
-                    "minFrequency": fmtMHz(gpu.minFrequency),
-                    "maxFrequency": fmtMHz(gpu.maxFrequency),
-                    "stockFrequency": fmtMHz(gpu.stockFrequency),
-                    "fanSpeed": fmtRPM(gpu.fanSpeed),
-                    "minFanSpeed": fmtRPM(gpu.minFanSpeed),
-                    "maxFanSpeed": fmtRPM(gpu.maxFanSpeed),
-                    "power": fmtW(gpu.power),
+                    name: gpu.name ?? "N/A",
+                    [t("load")]: fmtPct1(gpu.load),
+                    [t("temperature")]: fmtTemp(gpu.temperature),
+                    [t("minTemperature")]: fmtTemp(gpu.minTemperature),
+                    [t("maxTemperature")]: fmtTemp(gpu.maxTemperature),
+                    [t("frequency")]: fmtMHz(gpu.frequency),
+                    [t("minFrequency")]: fmtMHz(gpu.minFrequency),
+                    [t("maxFrequency")]: fmtMHz(gpu.maxFrequency),
+                    [t("stockFrequency")]: fmtMHz(gpu.stockFrequency),
+                    [t("fanSpeed")]: fmtRPM(gpu.fanSpeed),
+                    [t("minFanSpeed")]: fmtRPM(gpu.minFanSpeed),
+                    [t("maxFanSpeed")]: fmtRPM(gpu.maxFanSpeed),
+                    [t("power")]: fmtW(gpu.power),
                   })}
                 </div>
               </div>
@@ -865,12 +1954,12 @@
         if (data.ram) {
           parts.push(`
             <div class="item">
-              <h3>RAM</h3>
+              <h3>${esc(t("memory"))}</h3>
               <div class="kv">
                 ${pairRows({
-                  "totalSize": fmtMiB(data.ram.totalSize),
-                  "inUse": fmtMiB(data.ram.inUse),
-                  "moduleCount": Array.isArray(data.ram.modules) ? data.ram.modules.length : 0,
+                  [t("totalSize")]: fmtMiB(data.ram.totalSize),
+                  [t("inUse")]: fmtMiB(data.ram.inUse),
+                  [t("moduleCount")]: Array.isArray(data.ram.modules) ? data.ram.modules.length : 0,
                 })}
               </div>
             </div>
@@ -882,11 +1971,11 @@
                 <h3>RAM Module ${i} (ram.modules[${i}])</h3>
                 <div class="kv">
                   ${pairRows({
-                    "kind": mod.kind ?? "N/A",
-                    "size": fmtMiB(mod.size),
-                    "model": mod.model ?? "N/A",
-                    "frequency": fmtMHz(mod.frequency),
-                    "stockFrequency": fmtMHz(mod.stockFrequency),
+                    [t("kind")]: mod.kind ?? "N/A",
+                    [t("size")]: fmtMiB(mod.size),
+                    [t("model")]: mod.model ?? "N/A",
+                    [t("frequency")]: fmtMHz(mod.frequency),
+                    [t("stockFrequency")]: fmtMHz(mod.stockFrequency),
                   })}
                 </div>
               </div>
@@ -900,7 +1989,7 @@
               <h3>Kraken</h3>
               <div class="kv">
                 ${pairRows({
-                  "liquidTemperature": fmtTemp(data.kraken.liquidTemperature)
+                  [t("liquidTemperature")]: fmtTemp(data.kraken.liquidTemperature)
                 })}
               </div>
             </div>
@@ -953,15 +2042,15 @@
         const kraken = data.kraken || null;
 
         pages.push({
-          chip: "OVERVIEW",
-          name: "Sistem Özeti",
+          chip: t("overview").toUpperCase(),
+          name: t("systemOverview"),
           big: `${cpus.length} CPU / ${gpus.length} GPU`,
           unit: "",
           minis: [
-            { k: "RAM", v: ram ? `${fmtMiB(ram.inUse)} / ${fmtMiB(ram.totalSize)}` : "N/A" },
-            { k: "LIQUID", v: fmtTemp(kraken?.liquidTemperature) },
-            { k: "SHAPE", v: window.nzxt?.v1?.shape ?? "N/A" },
-            { k: "FPS", v: String(window.nzxt?.v1?.targetFps ?? "N/A") },
+            { k: t("ramShort"), v: ram ? `${fmtMiB(ram.inUse)} / ${fmtMiB(ram.totalSize)}` : "N/A" },
+            { k: t("liquidShort"), v: fmtTemp(kraken?.liquidTemperature) },
+            { k: t("shapeShort"), v: window.nzxt?.v1?.shape ?? "N/A" },
+            { k: t("fpsShort"), v: String(window.nzxt?.v1?.targetFps ?? "N/A") },
           ]
         });
 
@@ -972,10 +2061,10 @@
             big: fmtNum(cpu.temperature, 1),
             unit: "°C",
             minis: [
-              { k: "LOAD", v: fmtPct(cpu.load) },
-              { k: "CLOCK", v: fmtMHz(cpu.frequency) },
-              { k: "POWER", v: fmtW(cpu.power) },
-              { k: "FAN", v: fmtRPM(cpu.fanSpeed) },
+              { k: t("loadShort"), v: fmtPct(cpu.load) },
+              { k: t("clockShort"), v: fmtMHz(cpu.frequency) },
+              { k: t("powerShort"), v: fmtW(cpu.power) },
+              { k: t("fanShort"), v: fmtRPM(cpu.fanSpeed) },
             ]
           });
         });
@@ -987,25 +2076,25 @@
             big: fmtNum(gpu.temperature, 1),
             unit: "°C",
             minis: [
-              { k: "LOAD", v: fmtPct(gpu.load) },
-              { k: "CLOCK", v: fmtMHz(gpu.frequency) },
-              { k: "POWER", v: fmtW(gpu.power) },
-              { k: "FAN", v: fmtRPM(gpu.fanSpeed) },
+              { k: t("loadShort"), v: fmtPct(gpu.load) },
+              { k: t("clockShort"), v: fmtMHz(gpu.frequency) },
+              { k: t("powerShort"), v: fmtW(gpu.power) },
+              { k: t("fanShort"), v: fmtRPM(gpu.fanSpeed) },
             ]
           });
         });
 
         if (ram) {
           pages.push({
-            chip: "RAM",
-            name: "Bellek",
+            chip: t("memory").toUpperCase(),
+            name: t("memory"),
             big: fmtNum((ram.inUse / ram.totalSize) * 100, 0),
             unit: "%",
             minis: [
-              { k: "USED", v: fmtMiB(ram.inUse) },
-              { k: "TOTAL", v: fmtMiB(ram.totalSize) },
-              { k: "MODULES", v: String((ram.modules || []).length) },
-              { k: "TYPE", v: ram.modules?.[0]?.kind ?? "N/A" },
+              { k: t("used"), v: fmtMiB(ram.inUse) },
+              { k: t("total"), v: fmtMiB(ram.totalSize) },
+              { k: t("modules"), v: String((ram.modules || []).length) },
+              { k: t("type"), v: ram.modules?.[0]?.kind ?? "N/A" },
             ]
           });
         }
@@ -1013,14 +2102,14 @@
         if (kraken) {
           pages.push({
             chip: "KRAKEN",
-            name: "Liquid Temp",
+            name: t("liquidTemp"),
             big: fmtNum(kraken.liquidTemperature, 1),
             unit: "°C",
             minis: [
-              { k: "WIDTH", v: String(window.nzxt?.v1?.width ?? "N/A") },
-              { k: "HEIGHT", v: String(window.nzxt?.v1?.height ?? "N/A") },
-              { k: "SHAPE", v: window.nzxt?.v1?.shape ?? "N/A" },
-              { k: "GPU COUNT", v: String(gpus.length) },
+              { k: t("width"), v: String(window.nzxt?.v1?.width ?? "N/A") },
+              { k: t("height"), v: String(window.nzxt?.v1?.height ?? "N/A") },
+              { k: t("shape"), v: window.nzxt?.v1?.shape ?? "N/A" },
+              { k: t("gpuCount"), v: String(gpus.length) },
             ]
           });
         }
@@ -1034,12 +2123,12 @@
         if (!krakenPages.length) {
           els.krakenPage.innerHTML = `
             <div class="page-card">
-              <div class="page-chip">WAITING</div>
-              <div class="page-name">CAM verisi bekleniyor</div>
+              <div class="page-chip">${esc(t("waitingChip"))}</div>
+              <div class="page-name">${esc(t("waitingPageName"))}</div>
             </div>
           `;
           els.krakenPager.innerHTML = "";
-          els.krakenMeta.textContent = "henüz veri yok";
+          els.krakenMeta.textContent = t("waitingData");
           syncKrakenStateToStorage();
           return;
         }
@@ -1069,13 +2158,13 @@
           `<span class="pager-dot ${i === krakenIndex ? "active" : ""}"></span>`
         ).join("");
 
-        const now = new Date().toLocaleTimeString("tr-TR");
-        els.krakenMeta.textContent =
-          `${krakenIndex + 1}/${krakenPages.length} • ${krakenAutoRotate ? "AUTO" : "MANUAL"} • ${now}`;
+        const now = new Date().toLocaleTimeString(I18N[currentLang]?.htmlLang || "en");
+        const mode = krakenAutoRotate ? t("auto") : t("manual");
+        els.krakenMeta.textContent = I18N[currentLang].krakenMetaTemplate(krakenIndex + 1, krakenPages.length, mode, now);
 
         if (els.krakenHeaderSub) {
           els.krakenHeaderSub.textContent =
-            `${window.nzxt?.v1?.width ?? "?"}×${window.nzxt?.v1?.height ?? "?"} • ${window.nzxt?.v1?.shape ?? "?"}`;
+            `${window.nzxt?.v1?.width ?? "?"}×${window.nzxt?.v1?.height ?? "?"} • ${window.nzxt?.v1?.shape ?? "?"} • ${currentLang.toUpperCase()}`;
         }
 
         syncKrakenStateToStorage();
@@ -1139,8 +2228,36 @@
 
           case "setAutoRotate":
             krakenAutoRotate = Boolean(command.value);
+            updateAutoButtonText();
             renderKrakenPage();
             break;
+
+          case "setLanguage":
+            if (command.lang && I18N[command.lang]) {
+              currentLang = command.lang;
+              try { localStorage.setItem(STORAGE_LANG_KEY, currentLang); } catch {}
+              applyStaticTexts();
+              rerenderAll();
+            }
+            break;
+        }
+      }
+
+      function rerenderAll() {
+        applyStaticTexts();
+        if (latestData) {
+          if (!isKrakenView) {
+            renderSummary(latestData);
+            renderSensorCards(latestData);
+            renderFlatTable(latestData);
+            renderRawJson(latestData);
+          } else {
+            updateKrakenPages(latestData);
+          }
+        } else {
+          if (els.rawJson) els.rawJson.textContent = t("noDataYet");
+          if (els.liveText) els.liveText.textContent = t("waitingCam");
+          if (els.krakenMeta) els.krakenMeta.textContent = t("waitingData");
         }
       }
 
@@ -1163,6 +2280,15 @@
       window.addEventListener("storage", (event) => {
         if (!event.key) return;
 
+        if (event.key === STORAGE_LANG_KEY) {
+          const nextLang = localStorage.getItem(STORAGE_LANG_KEY);
+          if (nextLang && I18N[nextLang] && nextLang !== currentLang) {
+            currentLang = nextLang;
+            applyStaticTexts();
+            rerenderAll();
+          }
+        }
+
         if (!isKrakenView && event.key === STORAGE_STATE_KEY) {
           renderControllerState();
         }
@@ -1181,12 +2307,9 @@
       window.nzxt.v1 = window.nzxt.v1 || {};
       window.nzxt.v1.onMonitoringDataUpdate = handleData;
 
-      if (!isKrakenView) {
-        bindControllerButtons();
-        renderControllerState();
-      }
+      bindControllerButtons();
+      applyStaticTexts();
 
-      // Demo/fallback data
       setTimeout(() => {
         const hasRealWindowInfo =
           typeof window.nzxt?.v1?.width !== "undefined" ||
