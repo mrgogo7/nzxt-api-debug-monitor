@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NZXT CAM API Explorer</title>
+    <style>
+        :root {
+            --bg-dark: #0f0f13;
+            --bg-panel: #1a1a24;
+            --text-main: #f0f0f5;
+            --text-muted: #888899;
+            --accent: #9b59b6;
+            --cpu-color: #3498db;
+            --gpu-color: #2ecc71;
+            --ram-color: #f1c40f;
+            --kraken-color: #e74c3c;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        * { box-sizing: inherit; }
+
+        /* ========================================================
+           KRAKEN BROWSER MODE (ON THE PUMP ITSELF)
+           Displays as a circle. Everything inside must be centered.
+           ======================================================== */
+        body.kraken-mode {
+            justify-content: center;
+            align-items: center;
+            /* CAM API injects width/height, but we'll default to 640x640 for preview */
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .kraken-screen {
+            display: none; /* Only visible in kraken mode */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, #2a2a35 0%, #0f0f13 100%);
+            border-radius: 50%;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            padding: 10%; /* Keep content away from the physical circular bezel */
+            text-align: center;
+        }
+
+        body.kraken-mode .kraken-screen {
+            display: flex;
+        }
+
+        .kraken-title {
+            font-size: 2vw;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 2vh;
+        }
+
+        .kraken-stats {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .k-stat {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 10px 15px;
+            min-width: 120px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .k-stat-label { font-size: 1.5vw; color: var(--text-muted); display: block; margin-bottom: 5px; }
+        .k-stat-val { font-size: 3vw; font-weight: bold; }
+        .c-cpu { color: var(--cpu-color); }
+        .c-gpu { color: var(--gpu-color); }
+        .c-ram { color: var(--ram-color); }
+        .c-liq { color: var(--kraken-color); }
+
+        /* ========================================================
+           CONFIGURATION BROWSER MODE (ON PC MONITOR)
+           Displays developer tools, JSON preview, and simulated pump
+           ======================================================== */
+        .desktop-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        body.kraken-mode .desktop-layout {
+            display: none;
+        }
+
+        .left-panel {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-right: 1px solid #333;
+            background: #15151a;
+            overflow-y: auto;
+        }
+
+        .right-panel {
+            flex: 1.5;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0c;
+        }
+
+        .preview-container {
+            width: 640px;
+            height: 640px;
+            border-radius: 50%; /* Simulate physical screen */
+            border: 10px solid #222;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            position: relative;
+            background: #000;
+            flex-shrink: 0;
+            overflow: hidden;
+            /* We inject the kraken-screen content here via JS cloning for the preview */
+        }
+
+        .dev-header {
+            margin-bottom: 20px;
+        }
+
+        .dev-header h1 {
+            margin: 0;
+            color: var(--accent);
+            font-size: 24px;
+        }
+        
+        .dev-header p {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 14px;
+        }
+
+        .json-viewer {
+            flex: 1;
+            background: #000;
+            border-radius: 8px;
+            padding: 20px;
+            overflow: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            border: 1px solid #333;
+        }
+
+        /* Syntax Highlighting */
+        .string { color: #a6e22e; }
+        .number { color: #ae81ff; }
+        .boolean { color: #fd971f; }
+        .null { color: #f92672; font-weight: bold; }
+        .key { color: #66d9ef; font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+    <!-- KRAKEN LCD UI (Visible when ?kraken=1) -->
+    <div class="kraken-screen" id="kraken-ui">
+        <div class="kraken-title">System Status</div>
+        <div class="kraken-stats" id="kraken-stats-container">
+            <!-- Dynamic data injected here -->
+            Waiting for CAM data...
+        </div>
+    </div>
+
+    <!-- DESKTOP DEV DASHBOARD (Visible normally on monitor) -->
+    <div class="desktop-layout" id="desktop-ui">
+        <div class="left-panel">
+            <div class="dev-header" style="text-align: center; margin-bottom: 40px;">
+                <h1>Pump LCD Preview</h1>
+                <p>Simulating 640x640 display</p>
+                <p style="color: #e74c3c; font-size: 12px; margin-top: 10px;">(This is how it will look on the physical AIO)</p>
+            </div>
+            
+            <div class="preview-container" id="pump-preview">
+                <!-- We will copy the kraken-ui HTML into here so the developer sees exactly what the pump sees -->
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="dev-header">
+                <h1>Live API Data (Developer View)</h1>
+                <p>Analyze `window.nzxt.v1.onMonitoringDataUpdate(data)` payload in real-time. Use this to find all fields like gpu0, gpu1, arrays, etc.</p>
+            </div>
+            <pre class="json-viewer" id="json-viewer">Waiting for API data...</pre>
+        </div>
+    </div>
+
+    <script>
+        // ---------------------------------------------------------
+        // 1. ENVIRONMENT DETECTION
+        // CAM adds "?kraken=1" when loading this URL inside the actual pump LCD browser.
+        // If it's not there, we assume the user opened the URL on their PC monitor (Config Browser).
+        // ---------------------------------------------------------
+        const searchParams = new URLSearchParams(window.location.search);
+        const isKrakenBrowser = searchParams.get("kraken") === "1" || searchParams.get("test") === "kraken";
+        
+        if (isKrakenBrowser) {
+            document.body.classList.add("kraken-mode");
+            console.log("Running in Kraken LCD Mode");
+        } else {
+            console.log("Running in Desktop Config / Developer Mode");
+            // Set up the pump preview container to mirror the kraken UI
+            document.getElementById('pump-preview').innerHTML = document.getElementById('kraken-ui').outerHTML;
+            // Un-hide the mirrored preview
+            document.getElementById('pump-preview').querySelector('.kraken-screen').style.display = 'flex';
+        }
+
+        // ---------------------------------------------------------
+        // 2. DATA FORMATTING UTILITIES
+        // ---------------------------------------------------------
+        function syntaxHighlight(json) {
+            if (typeof json != 'string') {
+                json = JSON.stringify(json, undefined, 2);
+            }
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                var cls = 'number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) { cls = 'key'; } 
+                    else { cls = 'string'; }
+                } else if (/true|false/.test(match)) { cls = 'boolean'; } 
+                else if (/null/.test(match)) { cls = 'null'; }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function formatVal(val) {
+            if (val === undefined || val === null) return '--';
+            return Math.round(val);
+        }
+
+        // ---------------------------------------------------------
+        // 3. UI UPDATER (Runs every 1 second when CAM pushes data)
+        // ---------------------------------------------------------
+        function updateUI(data) {
+            // Update the raw JSON on the desktop monitor view
+            if (!isKrakenBrowser) {
+                document.getElementById('json-viewer').innerHTML = syntaxHighlight(data);
+            }
+
+            // Build the HTML for the circular LCD screen
+            let statsHtml = '';
+
+            // CPU Temp & Load
+            if (data.cpus && data.cpus.length > 0) {
+                const cpu = data.cpus[0]; // Usually just 1 CPU
+                const loadStr = cpu.load !== undefined ? formatVal(cpu.load * 100) + '%' : '--%';
+                statsHtml += `
+                    <div class="k-stat">
+                        <span class="k-stat-label">CPU Temp</span>
+                        <span class="k-stat-val c-cpu">${formatVal(cpu.temperature)}°C</span>
+                    </div>
+                    <div class="k-stat">
+                        <span class="k-stat-label">CPU Load</span>
+                        <span class="k-stat-val c-cpu">${loadStr}</span>
+                    </div>
+                `;
+            }
+
+            // GPU Temps & Loads (Handles GPU0, GPU1, etc dynamically)
+            if (data.gpus && data.gpus.length > 0) {
+                data.gpus.forEach((gpu, index) => {
+                    const loadStr = gpu.load !== undefined ? formatVal(gpu.load * 100) + '%' : '--%';
+                    statsHtml += `
+                        <div class="k-stat">
+                            <span class="k-stat-label">GPU${index} Temp</span>
+                            <span class="k-stat-val c-gpu">${formatVal(gpu.temperature)}°C</span>
+                        </div>
+                        <div class="k-stat">
+                            <span class="k-stat-label">GPU${index} Load</span>
+                            <span class="k-stat-val c-gpu">${loadStr}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            // Liquid Temp
+            if (data.kraken) {
+                statsHtml += `
+                    <div class="k-stat" style="width: 100%;">
+                        <span class="k-stat-label">Liquid Temp</span>
+                        <span class="k-stat-val c-liq">${formatVal(data.kraken.liquidTemperature)}°C</span>
+                    </div>
+                `;
+            }
+
+            // Apply HTML to the actual Kraken screen div
+            const krakenContainer = document.getElementById('kraken-stats-container');
+            if (krakenContainer) krakenContainer.innerHTML = statsHtml;
+
+            // If we are on Desktop, also update the mirrored preview container
+            if (!isKrakenBrowser) {
+                const previewContainer = document.getElementById('pump-preview').querySelector('#kraken-stats-container');
+                if (previewContainer) previewContainer.innerHTML = statsHtml;
+            }
+        }
+
+        // ---------------------------------------------------------
+        // 4. CAM API HOOK
+        // ---------------------------------------------------------
+        window.nzxt = {
+            v1: {
+                onMonitoringDataUpdate: (data) => {
+                    updateUI(data);
+                }
+            }
+        };
+
+        // ---------------------------------------------------------
+        // 5. MOCK DATA GENERATOR (For offline browser testing)
+        // ---------------------------------------------------------
+        const forceMockData = searchParams.get("test") === "1" || searchParams.get("test") === "kraken";
+        if (forceMockData) {
+            console.log("Running in Mock Test Mode.");
+            
+            // If the API hasn't populated window.nzxt.v1.shape natively, let's mock it
+            if (!window.nzxt.v1.shape) {
+                window.nzxt.v1.shape = "circle";
+                window.nzxt.v1.width = 640;
+                window.nzxt.v1.height = 640;
+            }
+
+            setInterval(() => {
+                const mockData = {
+                    cpus: [
+                        { name: "Intel Core i9-13900K", load: Math.random() * 0.4 + 0.1, temperature: Math.random() * 15 + 45 }
+                    ],
+                    gpus: [
+                        { name: "NVIDIA GeForce RTX 4090", load: Math.random() * 0.9, temperature: Math.random() * 20 + 50 },
+                        { name: "NVIDIA GeForce RTX 4090 (Secondary)", load: 0.05, temperature: 41 } // Multiple GPUs simulation (GPU0, GPU1)
+                    ],
+                    ram: { totalSize: 32768, inUse: Math.random() * 4000 + 12000 },
+                    kraken: { liquidTemperature: Math.random() * 2 + 32 }
+                };
+
+                window.nzxt.v1.onMonitoringDataUpdate(mockData);
+            }, 1000);
+        }
+
+    </script>
+</body>
+</html>
