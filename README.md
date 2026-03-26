@@ -55,11 +55,13 @@ Opening it directly in a browser **will not provide any data**, because the NZXT
 1. Open **NZXT CAM**
 2. Go to **Web Integration**
 3. Add or open the following URL:
-
+```js
 https://nzxt-esc.pages.dev/debug/ 
+```
 or 
+```js
 https://mrgogo7.github.io/nzxt-api-debug-monitor
-
+```
 ---
 
 ### ⚠️ Browser Usage
