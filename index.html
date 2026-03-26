@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>NZXT CAM Live Monitor</title>
+  <title>NZXT-ESC Debug Live Monitor</title>
   <style>
     :root {
       --bg: #09111f;
@@ -497,20 +497,29 @@
       font-family: var(--mono);
     }
   </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WTNNGF0N2M"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-WTNNGF0N2M');
+  </script>
 </head>
 <body>
   <div id="normalApp" class="wrap">
     <div class="title">
-      <h1>NZXT CAM Web Integration — Final Live Viewer</h1>
+      <h1>NZXT-ESC Web Integration Debug Monitor</h1>
       <p>
-        Built for real payloads. The page stays live, adapts to different hardware models, and keeps raw data easy to copy.
-        It renders known CAM fields, but also flattens and shows any additional runtime fields that may appear on other devices.
+        A live debug monitor built for the NZXT API. It stays live, adapts to different hardware models, and makes raw runtime data easy to inspect, verify, and copy.
+        Known API fields are presented clearly, while any additional fields exposed by specific devices are automatically flattened and shown as well.
       </p>
     </div>
 
     <section class="panel" style="margin-bottom:12px;">
       <div class="panel-head">
-        <h2>Kraken Control</h2>
+        <h2>Kraken LCD Control</h2>
         <div class="status">
           <span class="badge">Remote state: <span id="controllerState">-</span></span>
         </div>
@@ -539,9 +548,9 @@
         <div class="summary-grid" id="summary"></div>
 
         <div class="callout">
-          <b>Important:</b> the values you see depend on your specific device, CAM version, and current runtime state.
-          Other hardware models may expose fewer or more fields. This page therefore shows both
-          <b>structured sensor cards</b> and a <b>flattened raw field list</b> so you can verify what CAM actually sends live.
+			<b>Important:</b> the data shown here depends on your device, NZXT API version, and current runtime state.
+			Field availability may vary across hardware. To aid debugging, this page displays both
+			<b>structured sensor data</b> and a <b>flattened raw field list</b>, so you can inspect exactly what the NZXT API returns in real time.
         </div>
 
         <div class="sensor-list" id="sensorCards"></div>
@@ -571,7 +580,7 @@
             </table>
           </div>
           <div class="footer-note">
-            This is the most reliable “what is CAM actually giving me right now?” view.
+            This is the most reliable view of what the NZXT API is returning in real time.
           </div>
         </div>
       </section>
@@ -645,7 +654,7 @@
       <div class="kraken-safe">
         <div class="kraken-header">
           <div class="kraken-title">NZXT CAM</div>
-          <div id="krakenHeaderSub" class="kraken-sub">640×640 circle</div>
+          <div id="krakenHeaderSub" class="kraken-sub">Waiting for CAM metadata</div>
         </div>
 
         <div class="kraken-page">
@@ -920,7 +929,20 @@
         const parts = [];
 
         if (!data) {
-          els.sensorCards.innerHTML = "";
+          els.sensorCards.innerHTML = `
+            <div class="sensor-item">
+              <h3>No live sensor data yet</h3>
+              <div class="kv">
+                ${pairRows({
+                  status: "Waiting for NZXT CAM monitoring payload",
+                  cpus: "N/A",
+                  gpus: "N/A",
+                  ram: "N/A",
+                  kraken: "N/A"
+                })}
+              </div>
+            </div>
+          `;
           return;
         }
 
@@ -1044,12 +1066,6 @@
       }
 
       function renderFlattened() {
-        if (!latestPayload) {
-          els.flatBody.innerHTML = "";
-          els.flatRowCount.textContent = "0";
-          return;
-        }
-
         const combined = {
           windowNzxtV1: {
             width: window.nzxt?.v1?.width ?? null,
@@ -1323,6 +1339,8 @@
           `;
           els.krakenPager.innerHTML = "";
           els.krakenMeta.textContent = "waiting for data...";
+          els.krakenHeaderSub.textContent =
+            `${window.nzxt?.v1?.width ?? "?"}×${window.nzxt?.v1?.height ?? "?"} • ${window.nzxt?.v1?.shape ?? "?"}`;
           return;
         }
 
@@ -1479,104 +1497,18 @@
       renderControllerState();
 
       setupMonitoringHook();
+      renderMeta();
+      renderAll();
 
-      // Refresh metadata even if payload hasn't changed yet
       setInterval(() => {
         renderMeta();
-        if (!latestPayload) renderKrakenPage();
-      }, 1500);
-
-      // Demo / fallback outside CAM
-      setTimeout(() => {
-        const hasRealInfo =
-          typeof window.nzxt?.v1?.width !== "undefined" ||
-          typeof window.nzxt?.v1?.height !== "undefined";
-
-        if (!hasRealInfo) {
-          window.nzxt = window.nzxt || {};
-          window.nzxt.v1 = window.nzxt.v1 || {};
-
-          if (isKrakenView) {
-            window.nzxt.v1.width = 640;
-            window.nzxt.v1.height = 640;
-            window.nzxt.v1.shape = "circle";
-            window.nzxt.v1.targetFps = 40;
-          } else {
-            window.nzxt.v1.width = 1280;
-            window.nzxt.v1.height = 720;
-            window.nzxt.v1.shape = "rectangle";
-            window.nzxt.v1.targetFps = 40;
-          }
-
-          const demoPayload = {
-            cpus: [{
-              name: "Ryzen 7 9800X3D",
-              manufacturer: "AMD",
-              codeName: "Granite Ridge",
-              socket: "Socket AM5 (LGA1718)",
-              load: 0.02796614170074463,
-              numCores: 8,
-              numThreads: 16,
-              temperature: 42,
-              frequency: 3600,
-              minFrequency: 2323,
-              maxFrequency: 5225,
-              stockFrequency: 4700,
-              fanSpeed: 2106,
-              minFanSpeed: 1398,
-              maxFanSpeed: 2903,
-              tdp: 120,
-              power: 24.85525131225586
-            }],
-            gpus: [{
-              name: "NVIDIA GeForce RTX 4060 Ti",
-              load: 0.009999999776482582,
-              temperature: 47,
-              minTemperature: 40,
-              maxTemperature: 69,
-              frequency: 2565,
-              minFrequency: 2565,
-              maxFrequency: 2910,
-              fanSpeed: 0,
-              minFanSpeed: 0,
-              maxFanSpeed: 2093,
-              power: 23.070999145507812
-            }],
-            ram: {
-              totalSize: 32410,
-              inUse: 10120,
-              modules: [
-                {
-                  kind: "DDR5",
-                  size: 16384,
-                  model: "G.Skill F5-6000J2836G16G",
-                  frequency: 3000,
-                  stockFrequency: 2400
-                },
-                {
-                  kind: "DDR5",
-                  size: 16384,
-                  model: "G.Skill F5-6000J2836G16G",
-                  frequency: 3000,
-                  stockFrequency: 2400
-                }
-              ]
-            },
-            kraken: {
-              liquidTemperature: 26
-            }
-          };
-
-          try {
-            window.nzxt.v1.onMonitoringDataUpdate(demoPayload);
-          } catch (err) {
-            console.error(err);
-          }
-        } else {
-          renderMeta();
-          renderAll();
+        if (!latestPayload) {
+          renderSummary();
+          renderSensorCards();
+          renderFlattened();
+          renderKrakenPage();
         }
-      }, 600);
+      }, 1500);
     })();
   </script>
 </body>
