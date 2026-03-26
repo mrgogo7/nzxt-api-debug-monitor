@@ -56,8 +56,7 @@ Opening it directly in a browser **will not provide any data**, because the NZXT
 2. Go to **Web Integration**
 3. Add or open the following URL:
 
-https://nzxt-esc.pages.dev/debug/
-
+https://nzxt-esc.pages.dev/debug/ or https://mrgogo7.github.io/nzxt-api-debug-monitor
 
 ---
 
