@@ -2,6 +2,9 @@
 
 A live debug monitor built for the NZXT Web Integration API.
 
+My Main Project: https://github.com/mrgogo7/nzxt-esc
+Main Demo: https://nzxt-esc.pages.dev/
+
 ---
 
 ## Overview
